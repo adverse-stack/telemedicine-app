@@ -1,0 +1,17 @@
+# Dependencies
+/node_modules
+
+# Data
+*.db
+*.sqlite3
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Misc
+.DS_Store
+.env

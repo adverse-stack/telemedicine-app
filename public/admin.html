@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center">Admin Dashboard</h2>
+        <div class="card mt-4">
+            <div class="card-body">
+                <h4 class="card-title">Add New Doctor</h4>
+                <form id="add-doctor-form">
+                    <div class="form-group">
+                        <label for="doc-username">Username</label>
+                        <input type="text" id="doc-username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="doc-password">Password</label>
+                        <input type="password" id="doc-password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="doc-profession">Profession</label>
+                        <input type="text" id="doc-profession" class="form-control" placeholder="e.g., Cardiology" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Add Doctor</button>
+                    <div id="admin-message" class="alert mt-3 d-none"></div>
+                </form>
+            </div>
+        </div>
+        <button id="logout-btn" class="btn btn-secondary mt-4">Logout</button>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
