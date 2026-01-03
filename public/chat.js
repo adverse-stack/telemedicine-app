@@ -4,6 +4,7 @@ const socket = io();
 let localStream;
 let peerConnection;
 let room;
+let iceCandidateBuffer = []; // Buffer for ICE candidates
 
 const servers = {
     iceServers: [
@@ -61,13 +62,31 @@ window.initChatAndVideo = async (doctorId) => {
     }
 };
 
+// Function to process buffered ICE candidates
+const processIceCandidateBuffer = async () => {
+    while (iceCandidateBuffer.length > 0) {
+        const candidate = iceCandidateBuffer.shift();
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (e) {
+            console.error('Error adding buffered ice candidate', e);
+        }
+    }
+};
+
 // Socket listeners for WebRTC signaling
 socket.on('webrtc_offer', async (offer) => {
-    if (sessionStorage.getItem('userRole') === 'doctors') {
+    const userRole = sessionStorage.getItem('userRole');
+    if (userRole === 'doctors') {
+        if (!peerConnection) await initChatAndVideo(room);
         await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
         socket.emit('webrtc_answer', { room, answer });
+
+        // Process any candidates that arrived early
+        await processIceCandidateBuffer();
+
         document.getElementById('waiting-for-patient').classList.add('d-none');
         document.getElementById('consultation-room').classList.remove('d-none');
     }
@@ -75,9 +94,17 @@ socket.on('webrtc_offer', async (offer) => {
 
 socket.on('webrtc_answer', async (answer) => {
     await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+    // Process any candidates that arrived early
+    await processIceCandidateBuffer();
 });
 
 socket.on('webrtc_ice_candidate', async (candidate) => {
+    // If the peer connection isn't ready or doesn't have a remote description, buffer the candidate
+    if (!peerConnection || !peerConnection.remoteDescription) {
+        iceCandidateBuffer.push(candidate);
+        return;
+    }
+    // Otherwise, add the ICE candidate immediately
     try {
         await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
     } catch (e) {
@@ -104,7 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.location.pathname.includes('doctor.html')) {
         const doctorId = sessionStorage.getItem('userId');
         if (doctorId) {
-            // The doctor just waits, init is triggered by patient's offer
             initChatAndVideo(doctorId); 
             // Announce to the server that a doctor is online
             socket.emit('doctor_joins', { userId: doctorId });
