@@ -5,6 +5,73 @@ document.addEventListener('DOMContentLoaded', () => {
     const addDoctorForm = document.getElementById('add-doctor-form');
     const findDoctorsBtn = document.getElementById('find-doctors-btn');
     const logoutBtn = document.getElementById('logout-btn');
+    const doctorsTableBody = document.getElementById('doctors-table-body');
+    const doctorsListMessage = document.getElementById('doctors-list-message');
+
+
+    // Function to fetch and display doctors
+    const fetchDoctors = async () => {
+        if (!doctorsTableBody) return; // Only run on admin page
+
+        try {
+            const response = await fetch('/api/admin/doctors');
+            const doctors = await response.json();
+
+            doctorsTableBody.innerHTML = ''; // Clear existing list
+            if (doctors.length > 0) {
+                doctors.forEach(doctor => {
+                    const row = doctorsTableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${doctor.id}</td>
+                        <td>${doctor.username}</td>
+                        <td>${doctor.profession}</td>
+                        <td><button class="btn btn-danger btn-sm delete-doctor-btn" data-doctor-id="${doctor.id}">Delete</button></td>
+                    `;
+                });
+                // Add event listeners to delete buttons
+                doctorsTableBody.querySelectorAll('.delete-doctor-btn').forEach(button => {
+                    button.addEventListener('click', deleteDoctor);
+                });
+                doctorsListMessage.classList.add('d-none');
+            } else {
+                doctorsListMessage.textContent = 'No doctors found.';
+                doctorsListMessage.classList.remove('d-none');
+                doctorsListMessage.classList.remove('alert-success', 'alert-danger');
+                doctorsListMessage.classList.add('alert-info');
+            }
+        } catch (error) {
+            console.error('Failed to fetch doctors:', error);
+            doctorsListMessage.textContent = 'Failed to load doctors.';
+            doctorsListMessage.classList.remove('d-none', 'alert-success');
+            doctorsListMessage.classList.add('alert-danger');
+        }
+    };
+
+    // Function to delete a doctor
+    const deleteDoctor = async (e) => {
+        const doctorId = e.target.getAttribute('data-doctor-id');
+        if (!confirm('Are you sure you want to delete this doctor?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/doctors/${doctorId}`, {
+                method: 'DELETE',
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(data.message);
+                fetchDoctors(); // Refresh the list
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            console.error('Failed to delete doctor:', error);
+            alert('Failed to delete doctor.');
+        }
+    };
+
 
     // Handle Login
     if (loginForm) {
@@ -92,10 +159,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 const data = await response.json();
-                adminMessage.textContent = data.message;
-                adminMessage.classList.remove('d-none', 'alert-danger');
-                adminMessage.classList.add('alert-success');
-                addDoctorForm.reset();
+                if (response.ok) {
+                    adminMessage.textContent = data.message;
+                    adminMessage.classList.remove('d-none', 'alert-danger');
+                    adminMessage.classList.add('alert-success');
+                    addDoctorForm.reset();
+                    fetchDoctors(); // Refresh the list after adding a doctor
+                } else {
+                    adminMessage.textContent = data.message;
+                    adminMessage.classList.remove('d-none', 'alert-success');
+                    adminMessage.classList.add('alert-danger');
+                }
             } catch (error) {
                 adminMessage.textContent = 'Failed to add doctor.';
                 adminMessage.classList.remove('d-none', 'alert-success');
@@ -168,8 +242,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const protectedPages = ['/admin.html', '/doctor.html', '/patient.html'];
     if (protectedPages.includes(window.location.pathname)) {
         const userRole = sessionStorage.getItem('userRole');
-        if (!userRole || !window.location.pathname.startsWith(`/${userRole.slice(0, -1)}`)) {
-             // window.location.href = '/';
+        // If not logged in or role doesn't match page, redirect to login
+        if (!userRole || !window.location.pathname.startsWith(`/${userRole.slice(0, -1)}.html`)) {
+             window.location.href = '/';
+        }
+
+        // Specific to admin page: fetch doctors on load
+        if (window.location.pathname === '/admin.html') {
+            fetchDoctors();
         }
     }
 });

@@ -27,66 +27,78 @@ app.use('/api', (req, res, next) => {
 });
 
 // API Routes
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
         return res.status(400).json({ success: false, message: 'Missing username or password' });
     }
 
-    bcrypt.hash(password, saltRounds, (err, hash) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: 'Error hashing password' });
-        }
-        db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', [username, hash, 'patient'], function(err) {
-            if (err) {
-                return res.status(400).json({ success: false, message: 'Username already taken' });
-            }
-            res.json({ success: true, message: 'Registration successful', userId: this.lastID });
-        });
-    });
+    try {
+        const hash = await bcrypt.hash(password, saltRounds);
+        const result = await db.query('INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id', [username, hash, 'patient']);
+        res.json({ success: true, message: 'Registration successful', userId: result.rows[0].id });
+    } catch (err) {
+        res.status(400).json({ success: false, message: 'Username already taken' });
+    }
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { role, username, password } = req.body;
     
     // Convert plural role from frontend (e.g., "patients") to singular for DB ("patient")
     const singularRole = role.endsWith('s') ? role.slice(0, -1) : role;
 
-    db.get('SELECT * FROM users WHERE username = ? AND role = ?', [username, singularRole], (err, user) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: 'Server error' });
-        }
+    try {
+        const { rows } = await db.query('SELECT * FROM users WHERE username = $1 AND role = $2', [username, singularRole]);
+        const user = rows[0];
+
         if (!user) {
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
 
-        bcrypt.compare(password, user.password, (err, result) => {
-            if (result) {
-                res.json({ success: true, message: 'Login successful', userId: user.id, role: user.role });
-            } else {
-                res.status(401).json({ success: false, message: 'Invalid credentials' });
-            }
-        });
-    });
+        const result = await bcrypt.compare(password, user.password);
+        if (result) {
+            res.json({ success: true, message: 'Login successful', userId: user.id, role: user.role });
+        } else {
+            res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 });
 
-app.post('/api/admin/doctors', (req, res) => {
+app.post('/api/admin/doctors', async (req, res) => {
     let { username, password, profession } = req.body;
     if (!username || !password || !profession) {
         return res.status(400).json({ success: false, message: 'Missing required fields.' });
     }
     
-    bcrypt.hash(password, saltRounds, (err, hash) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: 'Error hashing password' });
-        }
-        db.run('INSERT INTO users (username, password, role, profession) VALUES (?, ?, ?, ?)', [username, hash, 'doctor', profession.trim()], function(err) {
-            if (err) {
-                return res.status(400).json({ success: false, message: 'Username already taken' });
-            }
-            res.json({ success: true, message: 'Doctor created successfully.', doctor: { id: this.lastID, username, profession: profession.trim() } });
-        });
-    });
+    try {
+        const hash = await bcrypt.hash(password, saltRounds);
+        const result = await db.query('INSERT INTO users (username, password, role, profession) VALUES ($1, $2, $3, $4) RETURNING id, username, profession', [username, hash, 'doctor', profession.trim()]);
+        res.json({ success: true, message: 'Doctor created successfully.', doctor: result.rows[0] });
+    } catch (err) {
+        res.status(400).json({ success: false, message: 'Username already taken' });
+    }
+});
+
+app.get('/api/admin/doctors', async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT id, username, profession FROM users WHERE role = \'doctor\'');
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.delete('/api/admin/doctors/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.query('DELETE FROM users WHERE id = $1 AND role = \'doctor\'', [id]);
+        res.json({ success: true, message: 'Doctor deleted successfully.' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 });
 
 app.get('/api/doctors', (req, res) => {
@@ -105,15 +117,19 @@ app.get('/api/doctors', (req, res) => {
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
 
-    socket.on('doctor_joins', (data) => {
+    socket.on('doctor_joins', async (data) => {
         const { userId } = data;
-        // Fetch doctor details from DB
-        db.get('SELECT id, username, profession FROM users WHERE id = ? AND role = ?', [userId, 'doctor'], (err, doctor) => {
+        try {
+            // Fetch doctor details from DB
+            const { rows } = await db.query('SELECT id, username, profession FROM users WHERE id = $1 AND role = \'doctor\'', [userId]);
+            const doctor = rows[0];
             if (doctor) {
                 console.log(`Doctor ${doctor.username} is online.`);
                 onlineDoctors[doctor.id] = { ...doctor, socketId: socket.id };
             }
-        });
+        } catch (err) {
+            console.error('Error fetching doctor details:', err);
+        }
     });
 
     socket.on('join', (room) => {

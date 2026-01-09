@@ -1,49 +1,45 @@
-const sqlite3 = require('sqlite3').verbose();
+require('dotenv').config();
+const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 
-const DBSOURCE = "telemedicine.db";
-
-const db = new sqlite3.Database(DBSOURCE, (err) => {
-    if (err) {
-        // Cannot open database
-        console.error(err.message);
-        throw err;
-    } else {
-        console.log('Connected to the SQLite database.');
-        db.run(`CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT,
-            role TEXT,
-            profession TEXT,
-            CONSTRAINT username_unique UNIQUE (username)
-        )`, (err) => {
-            if (err) {
-                console.error("Error creating users table", err);
-            }
-        });
-
-        // Upsert admin user
-        const saltRounds = 10;
-        bcrypt.hash('password', saltRounds, (err, hash) => {
-            if (err) {
-                console.error("Error hashing password for admin user", err);
-            } else {
-                db.run(`INSERT INTO users (username, password, role) 
-                        VALUES ('admin', ?, 'admin') 
-                        ON CONFLICT(username) DO NOTHING`, 
-                        [hash], 
-                        (err) => {
-                    if (err) {
-                        console.error("Error creating admin user", err);
-                    } else {
-                        // This will either insert the admin or do nothing if it exists.
-                        console.log("Admin user checked/created.");
-                    }
-                });
-            }
-        });
-    }
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-module.exports = db;
+const createTable = async () => {
+  const queryText = `
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      role TEXT NOT NULL,
+      profession TEXT
+    );
+  `;
+  try {
+    await pool.query(queryText);
+    console.log('Users table is ready.');
+
+    // Upsert admin user
+    const saltRounds = 10;
+    const hash = await bcrypt.hash('password', saltRounds);
+    const adminQuery = `
+      INSERT INTO users (username, password, role) 
+      VALUES ('admin', $1, 'admin') 
+      ON CONFLICT (username) DO NOTHING;
+    `;
+    await pool.query(adminQuery, [hash]);
+    console.log('Admin user checked/created.');
+  } catch (err) {
+    console.error('Error creating table or admin user', err.stack);
+  }
+};
+
+createTable();
+
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+};
