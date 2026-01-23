@@ -10,7 +10,7 @@ const pool = new Pool({
 });
 
 const createTable = async () => {
-  const queryText = `
+  const usersTableQuery = `
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
@@ -19,9 +19,35 @@ const createTable = async () => {
       profession TEXT
     );
   `;
+
+  const conversationsTableQuery = `
+    CREATE TABLE IF NOT EXISTS conversations (
+      id SERIAL PRIMARY KEY,
+      patient_id INTEGER REFERENCES users(id),
+      doctor_id INTEGER REFERENCES users(id),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  const messagesTableQuery = `
+    CREATE TABLE IF NOT EXISTS messages (
+      id SERIAL PRIMARY KEY,
+      conversation_id INTEGER REFERENCES conversations(id),
+      sender_id INTEGER REFERENCES users(id),
+      message TEXT NOT NULL,
+      timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
   try {
-    await pool.query(queryText);
+    await pool.query(usersTableQuery);
     console.log('Users table is ready.');
+
+    await pool.query(conversationsTableQuery);
+    console.log('Conversations table is ready.');
+
+    await pool.query(messagesTableQuery);
+    console.log('Messages table is ready.');
 
     // Upsert admin user
     const saltRounds = 10;
@@ -34,7 +60,7 @@ const createTable = async () => {
     await pool.query(adminQuery, [hash]);
     console.log('Admin user checked/created.');
   } catch (err) {
-    console.error('Error creating table or admin user', err.stack);
+    console.error('Error creating tables or admin user', err.stack);
   }
 };
 

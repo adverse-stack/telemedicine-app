@@ -1,9 +1,8 @@
-// This script handles the WebRTC and chat functionality.
+// This script handles the WebRTC functionality.
 const socket = io();
 
 let localStream;
 let peerConnection;
-let room;
 let iceCandidateBuffer = []; // Buffer for ICE candidates
 
 const servers = {
@@ -12,9 +11,7 @@ const servers = {
     ],
 };
 
-// This function is exposed to be called from main.js or other scripts
-window.initChatAndVideo = async (doctorId) => {
-    room = doctorId; // Use the doctor's ID as the room name
+const initVideo = async (room) => {
     socket.emit('join', room);
 
     const localVideo = document.getElementById('local-video');
@@ -57,7 +54,7 @@ window.initChatAndVideo = async (doctorId) => {
         }
 
     } catch (error) {
-        console.error('Error initializing chat and video:', error);
+        console.error('Error initializing video:', error);
         alert("Could not start video. Please ensure you have a camera and have given permission.");
     }
 };
@@ -75,10 +72,10 @@ const processIceCandidateBuffer = async () => {
 };
 
 // Socket listeners for WebRTC signaling
-socket.on('webrtc_offer', async (offer) => {
+socket.on('webrtc_offer', async ({ room, offer }) => {
     const userRole = sessionStorage.getItem('userRole');
     if (userRole === 'doctors') {
-        if (!peerConnection) await initChatAndVideo(room);
+        if (!peerConnection) await initVideo(room);
         await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
@@ -112,43 +109,27 @@ socket.on('webrtc_ice_candidate', async (candidate) => {
     }
 });
 
-// Chat functionality
 document.addEventListener('DOMContentLoaded', () => {
-    const chatForm = document.getElementById('chat-form');
-    if (chatForm) {
-        chatForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const chatInput = document.getElementById('chat-input');
-            const message = chatInput.value;
-            if (message.trim() && room) {
-                // Only emit the message, don't append it here.
-                socket.emit('chat_message', { room, message });
-                chatInput.value = '';
-            }
-        });
-    }
-    // Initialize for doctor if on doctor's page
-    if (window.location.pathname.includes('doctor.html')) {
-        const doctorId = sessionStorage.getItem('userId');
-        if (doctorId) {
-            initChatAndVideo(doctorId); 
-            // Announce to the server that a doctor is online
-            socket.emit('doctor_joins', { userId: doctorId });
+    const params = new URLSearchParams(window.location.search);
+    const video = params.get('video');
+    const room = params.get('room');
+
+    if (video && room) {
+        const consultationRoom = document.getElementById('consultation-room');
+        if(consultationRoom) {
+            consultationRoom.classList.remove('d-none');
         }
+        
+        const professionSelection = document.getElementById('profession-selection');
+        if(professionSelection) {
+            professionSelection.classList.add('d-none');
+        }
+
+        const doctorListContainer = document.getElementById('doctor-list-container');
+        if(doctorListContainer) {
+            doctorListContainer.classList.add('d-none');
+        }
+        
+        initVideo(room);
     }
 });
-
-// Listen for messages and decide styling based on sender
-socket.on('chat_message', (data) => {
-    const messageType = data.sender === socket.id ? 'sent' : 'received';
-    appendMessage(data.message, messageType);
-});
-
-function appendMessage(message, type) {
-    const chatBox = document.getElementById('chat-box');
-    const messageElement = document.createElement('div');
-    messageElement.className = `chat-message ${type}`;
-    messageElement.textContent = message;
-    chatBox.appendChild(messageElement);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}

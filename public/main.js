@@ -98,7 +98,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     sessionStorage.setItem('username', username);
 
                     // Redirect based on role
-                    window.location.href = `/${role.slice(0, -1)}.html`;
+                    if (role === 'doctors') {
+                        window.location.href = '/doctor-dashboard.html';
+                    } else {
+                        window.location.href = `/${role.slice(0, -1)}.html`;
+                    }
                 } else {
                     errorMessage.textContent = data.message;
                     errorMessage.classList.remove('d-none');
@@ -206,17 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             const doctorId = e.target.getAttribute('data-doctor-id');
                             const doctorName = e.target.getAttribute('data-doctor-name');
                             sessionStorage.setItem('selectedDoctorId', doctorId);
-                            // Hide selection and show consultation room
-                            document.getElementById('profession-selection').classList.add('d-none');
-                            document.getElementById('doctor-list-container').classList.add('d-none');
-                            const consultationRoom = document.getElementById('consultation-room');
-                            consultationRoom.classList.remove('d-none');
-                            consultationRoom.querySelector('h4.card-title').textContent = `Consultation with ${doctorName}`;
                             
-                            // Initialize chat/video
-                            if (window.initChatAndVideo) {
-                                window.initChatAndVideo(doctorId);
-                            }
+                            // Redirect to the messaging page
+                            window.location.href = `/message.html?doctorId=${doctorId}&doctorName=${doctorName}`;
                         });
                     });
 
