@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (room) {
         socket.emit('join', room);
+        if (userRole === 'patients') {
+            socket.emit('patient_ready', { patientId, doctorId });
+        }
     }
 
     // Fetch chat history
