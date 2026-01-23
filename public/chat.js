@@ -11,7 +11,7 @@ const servers = {
     ],
 };
 
-const initVideo = async (room) => {
+const initVideo = async (room, isCaller) => {
     socket.emit('join', room);
 
     const localVideo = document.getElementById('local-video');
@@ -45,9 +45,8 @@ const initVideo = async (room) => {
             }
         };
 
-        // If the user is a patient, they create the offer
-        const userRole = sessionStorage.getItem('userRole');
-        if (userRole === 'patients') {
+        // If the user is the caller, they create the offer
+        if (isCaller) {
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
             socket.emit('webrtc_offer', { room, offer });
@@ -73,19 +72,27 @@ const processIceCandidateBuffer = async () => {
 
 // Socket listeners for WebRTC signaling
 socket.on('webrtc_offer', async ({ room, offer }) => {
-    const userRole = sessionStorage.getItem('userRole');
-    if (userRole === 'doctors') {
-        if (!peerConnection) await initVideo(room);
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-        socket.emit('webrtc_answer', { room, answer });
+    if (!peerConnection) {
+        // If the receiver hasn't initialized their video yet, do it now as a non-caller
+        await initVideo(room, false);
+    }
+    
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    socket.emit('webrtc_answer', { room, answer });
 
-        // Process any candidates that arrived early
-        await processIceCandidateBuffer();
+    // Process any candidates that arrived early
+    await processIceCandidateBuffer();
 
-        document.getElementById('waiting-for-patient').classList.add('d-none');
-        document.getElementById('consultation-room').classList.remove('d-none');
+    // Show the consultation room UI
+    const waitingElement = document.getElementById('waiting-for-patient');
+    if (waitingElement) {
+        waitingElement.classList.add('d-none');
+    }
+    const consultationRoom = document.getElementById('consultation-room');
+    if (consultationRoom) {
+        consultationRoom.classList.remove('d-none');
     }
 });
 
@@ -113,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const video = params.get('video');
     const room = params.get('room');
+    const isCaller = params.get('caller') === 'true';
 
     if (video && room) {
         const consultationRoom = document.getElementById('consultation-room');
@@ -130,6 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
             doctorListContainer.classList.add('d-none');
         }
         
-        initVideo(room);
+        initVideo(room, isCaller);
     }
 });

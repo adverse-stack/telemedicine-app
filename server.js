@@ -120,7 +120,7 @@ app.get('/api/doctor/patients', async (req, res) => {
             `SELECT u.id, u.username 
              FROM users u
              JOIN conversations c ON u.id = c.patient_id
-             WHERE c.doctor_id = $1`,
+             WHERE c.doctor_id = $1 AND u.role = 'patient'`,
             [doctorId]
         );
         res.json(rows);

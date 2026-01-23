@@ -86,10 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     callBtn.addEventListener('click', () => {
-        // Redirect to video call page
+        // Redirect to video call page, indicating this user is the caller
         const url = userRole === 'patients' ? 
-            `/patient.html?video=true&room=${room}` : 
-            `/doctor.html?video=true&room=${room}`;
+            `/patient.html?video=true&room=${doctorId}&caller=true` : 
+            `/doctor.html?video=true&room=${sessionStorage.getItem('userId')}&caller=true&patientId=${params.get('patientId')}`;
         window.location.href = url;
     });
 
