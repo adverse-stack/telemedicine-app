@@ -188,8 +188,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('chat_message', async (data) => {
-        const { room, message, senderId } = data;
-        const [,, patientId, doctorId] = room.split('_');
+        const { room: doctorId, message, senderId } = data; // room is now doctorId
+        const patientId = senderId; // sender is always the patient in this context
 
         try {
             // Check if conversation exists
@@ -200,21 +200,12 @@ io.on('connection', (socket) => {
             let conversationId;
 
             if (rows.length === 0) {
-                // Create new conversation
+                // Create new conversation if it doesn't exist
                 const result = await db.query(
                     'INSERT INTO conversations (patient_id, doctor_id) VALUES ($1, $2) RETURNING id',
                     [patientId, doctorId]
                 );
                 conversationId = result.rows[0].id;
-
-                // Notify doctor of new conversation
-                const doctorSocketId = onlineDoctors[doctorId]?.socketId;
-                if (doctorSocketId) {
-                    const { rows: patientRows } = await db.query('SELECT id, username FROM users WHERE id = $1', [patientId]);
-                    if (patientRows.length > 0) {
-                        io.to(doctorSocketId).emit('new_conversation', patientRows[0]);
-                    }
-                }
             } else {
                 conversationId = rows[0].id;
             }
@@ -225,8 +216,8 @@ io.on('connection', (socket) => {
                 [conversationId, senderId, message]
             );
 
-            // Broadcast the message to the room
-            io.to(room).emit('chat_message', { senderId, message });
+            // Broadcast the message to the room (which is the doctorId)
+            io.to(doctorId).emit('chat_message', { senderId, message });
         } catch (err) {
             console.error('Error saving or broadcasting chat message:', err);
         }

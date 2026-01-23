@@ -18,20 +18,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let room;
 
     if (userRole === 'patients') {
-        room = `chat_${patientId}_${doctorId}`;
+        room = doctorId; // Use doctorId as room name for patients
         chatWithName.textContent = `Chat with ${doctorName}`;
     } else if (userRole === 'doctors') {
         const pId = params.get('patientId');
         const pName = params.get('patientName');
-        room = `chat_${pId}_${sessionStorage.getItem('userId')}`;
+        room = doctorId; // Doctor also joins room based on their own ID
         chatWithName.textContent = `Chat with ${pName}`;
     }
 
     if (room) {
         socket.emit('join', room);
-        if (userRole === 'patients') {
-            socket.emit('patient_ready', { patientId, doctorId });
-        }
     }
 
     // Fetch chat history
