@@ -206,11 +206,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                      // Add event listeners to the new "Consult" buttons
                     doctorList.querySelectorAll('.btn-primary').forEach(button => {
-                        button.addEventListener('click', (e) => {
+                        button.addEventListener('click', async (e) => {
                             const doctorId = e.target.getAttribute('data-doctor-id');
                             const doctorName = e.target.getAttribute('data-doctor-name');
-                            sessionStorage.setItem('selectedDoctorId', doctorId);
+                            const patientId = sessionStorage.getItem('userId');
+
+                            try {
+                                await fetch('/api/start-conversation', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ patientId, doctorId }),
+                                });
+                            } catch (error) {
+                                console.error('Failed to start conversation:', error);
+                            }
                             
+                            sessionStorage.setItem('selectedDoctorId', doctorId);
                             // Redirect to the messaging page
                             window.location.href = `/message.html?doctorId=${doctorId}&doctorName=${doctorName}`;
                         });

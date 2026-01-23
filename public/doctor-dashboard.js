@@ -50,6 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchPatients();
     }
 
+    socket.on('new_patient', (patient) => {
+        fetchPatients();
+    });
+
     logoutBtn.addEventListener('click', () => {
         sessionStorage.clear();
         window.location.href = '/';

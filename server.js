@@ -130,6 +130,39 @@ app.get('/api/doctor/patients', async (req, res) => {
     }
 });
 
+app.post('/api/start-conversation', async (req, res) => {
+    const { patientId, doctorId } = req.body;
+    try {
+        // Check if conversation already exists
+        const { rows } = await db.query(
+            'SELECT id FROM conversations WHERE patient_id = $1 AND doctor_id = $2',
+            [patientId, doctorId]
+        );
+
+        if (rows.length === 0) {
+            // Create new conversation
+            await db.query(
+                'INSERT INTO conversations (patient_id, doctor_id) VALUES ($1, $2)',
+                [patientId, doctorId]
+            );
+        }
+        
+        // Notify doctor of new patient
+        const doctorSocketId = onlineDoctors[doctorId]?.socketId;
+        if (doctorSocketId) {
+            const { rows: patientRows } = await db.query('SELECT id, username FROM users WHERE id = $1', [patientId]);
+            if (patientRows.length > 0) {
+                io.to(doctorSocketId).emit('new_patient', patientRows[0]);
+            }
+        }
+        
+        res.json({ success: true, message: 'Conversation started.' });
+    } catch (err) {
+        console.error('Error starting conversation:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 app.get('/api/chat/history', async (req, res) => {
     const { conversationId } = req.query;
     try {
@@ -188,44 +221,29 @@ io.on('connection', (socket) => {
     });
 
     socket.on('chat_message', async (data) => {
-        console.log('chat_message received on server:', data);
-        const { room: doctorId, message, senderId } = data; // room is now doctorId
-        const patientId = senderId; 
-        console.log(`patientId: ${patientId}, doctorId: ${doctorId}`);
+        const { room: doctorId, message, senderId } = data;
+        const patientId = senderId;
 
         try {
-            // Check if conversation exists
-            let { rows } = await db.query(
+            // Get conversation ID
+            const { rows } = await db.query(
                 'SELECT id FROM conversations WHERE patient_id = $1 AND doctor_id = $2',
                 [patientId, doctorId]
             );
-            let conversationId;
-
-            if (rows.length === 0) {
-                // Create new conversation if it doesn't exist
-                const result = await db.query(
-                    'INSERT INTO conversations (patient_id, doctor_id) VALUES ($1, $2) RETURNING id',
-                    [patientId, doctorId]
+            
+            if (rows.length > 0) {
+                const conversationId = rows[0].id;
+                // Save message
+                await db.query(
+                    'INSERT INTO messages (conversation_id, sender_id, message) VALUES ($1, $2, $3)',
+                    [conversationId, senderId, message]
                 );
-                conversationId = result.rows[0].id;
-                console.log('New conversation created with ID:', conversationId);
-            } else {
-                conversationId = rows[0].id;
-                console.log('Existing conversation found with ID:', conversationId);
+
+                // Broadcast the message to the room (which is the doctorId)
+                io.to(doctorId).emit('chat_message', { senderId, message });
             }
-
-            // Save message
-            await db.query(
-                'INSERT INTO messages (conversation_id, sender_id, message) VALUES ($1, $2, $3)',
-                [conversationId, senderId, message]
-            );
-            console.log('Message saved to database.');
-
-            // Broadcast the message to the room (which is the doctorId)
-            io.to(doctorId).emit('chat_message', { senderId, message });
-            console.log(`Message broadcast to room ${doctorId}`);
         } catch (err) {
-            console.error('Error in chat_message handler:', err);
+            console.error('Error saving or broadcasting chat message:', err);
         }
     });
     
