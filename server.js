@@ -188,8 +188,10 @@ io.on('connection', (socket) => {
     });
 
     socket.on('chat_message', async (data) => {
+        console.log('chat_message received on server:', data);
         const { room: doctorId, message, senderId } = data; // room is now doctorId
-        const patientId = senderId; // sender is always the patient in this context
+        const patientId = senderId; 
+        console.log(`patientId: ${patientId}, doctorId: ${doctorId}`);
 
         try {
             // Check if conversation exists
@@ -206,8 +208,10 @@ io.on('connection', (socket) => {
                     [patientId, doctorId]
                 );
                 conversationId = result.rows[0].id;
+                console.log('New conversation created with ID:', conversationId);
             } else {
                 conversationId = rows[0].id;
+                console.log('Existing conversation found with ID:', conversationId);
             }
 
             // Save message
@@ -215,11 +219,13 @@ io.on('connection', (socket) => {
                 'INSERT INTO messages (conversation_id, sender_id, message) VALUES ($1, $2, $3)',
                 [conversationId, senderId, message]
             );
+            console.log('Message saved to database.');
 
             // Broadcast the message to the room (which is the doctorId)
             io.to(doctorId).emit('chat_message', { senderId, message });
+            console.log(`Message broadcast to room ${doctorId}`);
         } catch (err) {
-            console.error('Error saving or broadcasting chat message:', err);
+            console.error('Error in chat_message handler:', err);
         }
     });
     
