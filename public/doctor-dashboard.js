@@ -50,6 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchPatients();
     }
 
+    socket.on('new_conversation', (patient) => {
+        // Re-fetch the patient list to show the new conversation
+        fetchPatients();
+    });
+
     logoutBtn.addEventListener('click', () => {
         sessionStorage.clear();
         window.location.href = '/';

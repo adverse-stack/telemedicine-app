@@ -206,6 +206,15 @@ io.on('connection', (socket) => {
                     [patientId, doctorId]
                 );
                 conversationId = result.rows[0].id;
+
+                // Notify doctor of new conversation
+                const doctorSocketId = onlineDoctors[doctorId]?.socketId;
+                if (doctorSocketId) {
+                    const { rows: patientRows } = await db.query('SELECT id, username FROM users WHERE id = $1', [patientId]);
+                    if (patientRows.length > 0) {
+                        io.to(doctorSocketId).emit('new_conversation', patientRows[0]);
+                    }
+                }
             } else {
                 conversationId = rows[0].id;
             }
