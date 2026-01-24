@@ -11,6 +11,7 @@ const io = socketIo(server);
 const PORT = process.env.PORT || 3000;
 const saltRounds = 10;
 const onlineDoctors = {}; // In-memory store for online doctors
+const onlinePatients = {}; // In-memory store for online patients
 
 // Middleware
 app.use((req, res, next) => {
@@ -123,7 +124,11 @@ app.get('/api/doctor/patients', async (req, res) => {
              WHERE c.doctor_id = $1 AND u.role = 'patient'`,
             [doctorId]
         );
-        res.json(rows);
+        const patients = rows.map(patient => ({
+            ...patient,
+            isOnline: onlinePatients.hasOwnProperty(patient.id)
+        }));
+        res.json(patients);
     } catch (err) {
         console.error('Error fetching doctor patients:', err);
         res.status(500).json({ success: false, message: 'Server error' });
@@ -215,6 +220,12 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('patient_joins', (data) => {
+        const { patientId } = data;
+        console.log(`Patient ${patientId} is online.`);
+        onlinePatients[patientId] = socket.id;
+    });
+
     socket.on('join', (room) => {
         console.log(`Socket ${socket.id} joining room ${room}`);
         socket.join(room);
@@ -272,6 +283,15 @@ io.on('connection', (socket) => {
         if (disconnectedDoctorId) {
             console.log(`Doctor ${onlineDoctors[disconnectedDoctorId].username} went offline.`);
             delete onlineDoctors[disconnectedDoctorId];
+        }
+
+        // Find and remove the patient from onlinePatients if they disconnect
+        const disconnectedPatientId = Object.keys(onlinePatients).find(
+            id => onlinePatients[id] === socket.id
+        );
+        if (disconnectedPatientId) {
+            console.log(`Patient ${disconnectedPatientId} went offline.`);
+            delete onlinePatients[disconnectedPatientId];
         }
     });
 });

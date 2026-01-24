@@ -1,79 +1,16 @@
-body {
-    background-color: #f0f2f5;
+.online-status {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-left: 5px;
+    background-color: grey; /* Default for offline */
 }
 
-.centered-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+.online-status.online {
+    background-color: green;
 }
 
-.login-card {
-    width: 100%;
-    max-width: 400px;
-    border: none;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.video-container {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    background-color: #000;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-#remote-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-#local-video {
-    position: absolute;
-    bottom: 15px;
-    right: 15px;
-    width: 25%;
-    max-width: 180px;
-    border-radius: 5px;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.chat-box {
-    height: 300px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 15px;
-    overflow-y: auto;
-    background-color: #fafafa;
-    margin-top: 1rem;
-}
-
-.chat-message {
-    padding: 8px 12px;
-    border-radius: 18px;
-    margin-bottom: 10px;
-    max-width: 80%;
-    word-wrap: break-word;
-}
-
-.chat-message.sent {
-    background-color: #007bff;
-    color: white;
-    margin-left: auto;
-    text-align: right;
-}
-
-.chat-message.received {
-    background-color: #e9e9eb;
-    color: #333;
-    margin-right: auto;
-}
-
-#waiting-for-patient .spinner-border {
-    width: 3rem;
-    height: 3rem;
+.online-status.offline {
+    background-color: grey;
 }

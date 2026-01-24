@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     li.className = 'list-group-item d-flex justify-content-between align-items-center';
                     li.innerHTML = `
                         ${patient.username}
+                        <span class="online-status ${patient.isOnline ? 'online' : 'offline'}"></span>
                         <button class="btn btn-sm btn-primary" data-patient-id="${patient.id}" data-patient-name="${patient.username}">Chat</button>
                     `;
                     patientList.appendChild(li);

@@ -18,10 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let room;
 
     if (userRole === 'patients') {
-        room = doctorId; // Use doctorId as room name for patients
-        chatWithName.textContent = `Chat with ${doctorName}`;
-    } else if (userRole === 'doctors') {
-        const pId = params.get('patientId');
+                room = doctorId; // Use doctorId as room name for patients
+                chatWithName.textContent = `Chat with ${doctorName}`;
+                socket.emit('patient_joins', { patientId });
+            } else if (userRole === 'doctors') {        const pId = params.get('patientId');
         const pName = params.get('patientName');
         room = doctorId; // Doctor also joins room based on their own ID
         chatWithName.textContent = `Chat with ${pName}`;
