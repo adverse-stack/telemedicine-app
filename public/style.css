@@ -14,3 +14,37 @@
 .online-status.offline {
     background-color: grey;
 }
+
+/* Chat bubble styling */
+.chat-box {
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+.chat-message {
+    padding: 8px 12px;
+    border-radius: 15px;
+    margin-bottom: 5px;
+    max-width: 70%;
+    word-wrap: break-word;
+    font-size: 0.9em;
+}
+
+.chat-message.sent {
+    background-color: #007bff;
+    color: white;
+    margin-left: auto; /* Aligns to the right */
+    border-bottom-right-radius: 2px;
+}
+
+.chat-message.received {
+    background-color: #e2e6ea;
+    color: #333;
+    margin-right: auto; /* Aligns to the left */
+    border-bottom-left-radius: 2px;
+}

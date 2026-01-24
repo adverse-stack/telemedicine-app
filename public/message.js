@@ -73,7 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('chat_message', (data) => {
-        const messageType = data.senderId === patientId ? 'sent' : 'received';
+        const currentUserId = sessionStorage.getItem('userId');
+        const messageType = data.senderId == currentUserId ? 'sent' : 'received';
         appendMessage(data.message, messageType);
     });
 
