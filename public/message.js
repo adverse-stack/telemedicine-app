@@ -37,37 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.emit('join', room);
     }
 
-    // Fetch chat history
-    const fetchChatHistory = async () => {
-        let pId, dId;
-        if (currentUserRole === 'patient') {
-            pId = currentUserId;
-            dId = doctorIdParam;
-        } else if (currentUserRole === 'doctor') {
-            pId = patientIdParam;
-            dId = currentUserId;
-        }
-
-        if (pId && dId) {
-            try {
-                const convResponse = await fetch(`/api/conversation?patientId=${pId}&doctorId=${dId}`);
-                const { conversationId } = await convResponse.json();
-
-                if (conversationId) {
-                    const historyResponse = await fetch(`/api/chat/history?conversationId=${conversationId}`);
-                    const history = await historyResponse.json();
-                    history.forEach(msg => {
-                        const messageType = msg.sender_id == currentUserId ? 'sent' : 'received';
-                        appendMessage(msg.message, messageType);
-                    });
-                }
-            } catch (error) {
-                console.error('Failed to fetch chat history:', error);
-            }
-        }
-    };
-
-    fetchChatHistory();
+    // No chat history feature, so fetchChatHistory and its call are removed.
 
     chatForm.addEventListener('submit', (e) => {
         e.preventDefault();

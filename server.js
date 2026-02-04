@@ -153,7 +153,7 @@ app.post('/api/start-conversation', async (req, res) => {
         }
         
         // Notify doctor of new patient
-        const doctorSocketId = onlineDoctors[doctorId]?.socketId;
+        const doctorSocketId = onlineDoctors[Number(doctorId)]?.socketId; // Ensure doctorId is number
         if (doctorSocketId) {
             const { rows: patientRows } = await db.query('SELECT id, username FROM users WHERE id = $1', [patientId]);
             if (patientRows.length > 0) {
@@ -168,38 +168,6 @@ app.post('/api/start-conversation', async (req, res) => {
     }
 });
 
-app.get('/api/chat/history', async (req, res) => {
-    const { conversationId } = req.query;
-    try {
-        const { rows } = await db.query(
-            'SELECT * FROM messages WHERE conversation_id = $1 ORDER BY timestamp ASC',
-            [conversationId]
-        );
-        res.json(rows);
-    } catch (err) {
-        console.error('Error fetching chat history:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-app.get('/api/conversation', async (req, res) => {
-    const { patientId, doctorId } = req.query;
-    try {
-        const { rows } = await db.query(
-            'SELECT id FROM conversations WHERE patient_id = $1 AND doctor_id = $2',
-            [patientId, doctorId]
-        );
-        if (rows.length > 0) {
-            res.json({ conversationId: rows[0].id });
-        } else {
-            res.json({ conversationId: null });
-        }
-    } catch (err) {
-        console.error('Error fetching conversation:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
 
 // Socket.IO Connection Handling
 io.on('connection', (socket) => {
@@ -207,9 +175,10 @@ io.on('connection', (socket) => {
 
     socket.on('doctor_joins', async (data) => {
         const { userId } = data;
+        const doctorNumId = Number(userId); // Convert to number
         try {
             // Fetch doctor details from DB
-            const { rows } = await db.query('SELECT id, username, profession FROM users WHERE id = $1 AND role = \'doctor\'', [userId]);
+            const { rows } = await db.query('SELECT id, username, profession FROM users WHERE id = $1 AND role = \'doctor\'', [doctorNumId]);
             const doctor = rows[0];
             if (doctor) {
                 console.log(`Doctor ${doctor.username} is online.`);
@@ -223,7 +192,7 @@ io.on('connection', (socket) => {
     socket.on('patient_joins', (data) => {
         const { patientId } = data;
         console.log(`Patient ${patientId} is online.`);
-        onlinePatients[patientId] = socket.id;
+        onlinePatients[Number(patientId)] = socket.id; // Convert patientId to number
     });
 
     socket.on('join', (room) => {
@@ -233,45 +202,32 @@ io.on('connection', (socket) => {
 
     socket.on('chat_message', async (data) => {
         const { room: doctorId, message, senderId } = data;
-        const patientId = senderId;
+        const patientId = Number(senderId); // Ensure patientId is a number
+        const doctorNumId = Number(doctorId); // Ensure doctorId is a number
 
         try {
-            // Get conversation ID
-            const { rows } = await db.query(
-                'SELECT id FROM conversations WHERE patient_id = $1 AND doctor_id = $2',
-                [patientId, doctorId]
-            );
-            
-            if (rows.length > 0) {
-                const conversationId = rows[0].id;
-                // Save message
-                await db.query(
-                    'INSERT INTO messages (conversation_id, sender_id, message) VALUES ($1, $2, $3)',
-                    [conversationId, senderId, message]
-                );
-
-                // Broadcast the message to the room (which is the doctorId)
-                io.to(doctorId).emit('chat_message', { senderId, message });
-            }
+            // Broadcast the message to the room (which is the doctorId or patientId)
+            // No message saving logic as chat history is removed
+            io.to(doctorNumId).emit('chat_message', { senderId, message });
         } catch (err) {
-            console.error('Error saving or broadcasting chat message:', err);
+            console.error('Error broadcasting chat message:', err);
         }
     });
     
     // WebRTC Signaling
     socket.on('webrtc_offer', (data) => {
         const { room } = data;
-        socket.to(room).emit('webrtc_offer', data);
+        io.to(Number(room)).emit('webrtc_offer', data); // Ensure room is a number for Socket.IO room
     });
 
     socket.on('webrtc_answer', (data) => {
         const { room, answer } = data;
-        socket.to(room).emit('webrtc_answer', answer);
+        io.to(Number(room)).emit('webrtc_answer', answer); // Ensure room is a number
     });
 
     socket.on('webrtc_ice_candidate', (data) => {
         const { room, candidate } = data;
-        socket.to(room).emit('webrtc_ice_candidate', candidate);
+        io.to(Number(room)).emit('webrtc_ice_candidate', candidate); // Ensure room is a number
     });
 
     socket.on('disconnect', () => {
@@ -299,3 +255,4 @@ io.on('connection', (socket) => {
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
