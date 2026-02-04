@@ -207,15 +207,15 @@ document.addEventListener('DOMContentLoaded', () => {
                      // Add event listeners to the new "Consult" buttons
                     doctorList.querySelectorAll('.button-1').forEach(button => { // Changed query selector
                         button.addEventListener('click', async (e) => {
-                            const doctorId = e.target.getAttribute('data-doctor-id');
+                            const doctorId = Number(e.target.getAttribute('data-doctor-id')); // Cast to Number
                             const doctorName = e.target.getAttribute('data-doctor-name');
-                            const patientId = localStorage.getItem('userId'); // Changed to localStorage
+                            const patientId = Number(localStorage.getItem('userId')); // Cast to Number
 
                             try {
                                 await fetch('/api/start-conversation', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ patientId, doctorId }),
+                                    body: JSON.stringify({ patientId, doctorId }), // Sending numbers
                                 });
                             } catch (error) {
                                 console.error('Failed to start conversation:', error);
