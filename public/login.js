@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = ''; // Clear previous errors
 
         const form = event.target;
-        const email = form.querySelector('input[name="email"]').value;
+        const username = form.querySelector('input[name="username"]').value;
         const password = form.querySelector('input[name="password"]').value;
 
         try {
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username: email, password: password, role: role }),
+                body: JSON.stringify({ username: username, password: password, role: role }),
             });
 
             const data = await response.json();
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Store user info (e.g., in localStorage or sessionStorage)
                 localStorage.setItem('userId', data.userId);
                 localStorage.setItem('userRole', data.role);
-                localStorage.setItem('username', email); // Store username for display
+                localStorage.setItem('username', username); // Store username for display
 
                 // Redirect based on role
                 if (data.role === 'patient') {
