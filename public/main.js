@@ -222,8 +222,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                             
                             localStorage.setItem('selectedDoctorId', doctorId); // Changed to localStorage
-                            // Redirect to the messaging page
-                            window.location.href = `/message.html?doctorId=${doctorId}&doctorName=${doctorName}`;
+                            // Redirect to the waiting room page
+                            window.location.href = `/waiting-room.html?doctorId=${doctorId}&doctorName=${doctorName}`;
                         });
                     });
 

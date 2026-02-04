@@ -118,23 +118,25 @@ app.get('/api/doctor/patients', async (req, res) => {
     const { doctorId } = req.query;
     try {
         const { rows } = await db.query(
-            `SELECT u.id, u.username 
+            `SELECT u.id, u.username
              FROM users u
              JOIN conversations c ON u.id = c.patient_id
              WHERE c.doctor_id = $1 AND u.role = 'patient'`,
             [doctorId]
         );
-        const patients = rows.map(patient => ({
+        // Filter to include only online patients
+        const onlineFilteredPatients = rows.filter(patient => onlinePatients.hasOwnProperty(patient.id));
+
+        const patientsWithOnlineStatus = onlineFilteredPatients.map(patient => ({
             ...patient,
-            isOnline: onlinePatients.hasOwnProperty(patient.id)
+            isOnline: true // Since we filtered, they are all online
         }));
-        res.json(patients);
+        res.json(patientsWithOnlineStatus);
     } catch (err) {
         console.error('Error fetching doctor patients:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
-
 app.post('/api/start-conversation', async (req, res) => {
     const { patientId, doctorId } = req.body;
     try {
@@ -202,15 +204,13 @@ io.on('connection', (socket) => {
 
     socket.on('chat_message', async (data) => {
         console.log('Server received chat_message:', data);
-        const { room: doctorId, message, senderId } = data;
-        const patientId = Number(senderId); // Ensure patientId is a number
-        const doctorNumId = Number(doctorId); // Ensure doctorId is a number
+        const { room, message, senderId } = data; // Use 'room' directly
+        const numericRoom = Number(room); // Ensure room is a number
+        const numericSenderId = Number(senderId); // Ensure senderId is a number
 
         try {
-            // Broadcast the message to the room (which is the doctorId or patientId)
-            // No message saving logic as chat history is removed
-            console.log(`Server broadcasting chat_message to room ${doctorNumId}:`, { senderId, message });
-            io.to(doctorNumId).emit('chat_message', { senderId, message });
+            console.log(`Server broadcasting chat_message to room ${numericRoom}:`, { senderId: numericSenderId, message });
+            io.to(numericRoom).emit('chat_message', { senderId: numericSenderId, message });
         } catch (err) {
             console.error('Error broadcasting chat message:', err);
         }
@@ -230,6 +230,17 @@ io.on('connection', (socket) => {
     socket.on('webrtc_ice_candidate', (data) => {
         const { room, candidate } = data;
         io.to(Number(room)).emit('webrtc_ice_candidate', candidate); // Ensure room is a number
+    });
+
+    socket.on('doctor_accepts_consultation', (data) => {
+        const { patientId, doctorId, doctorName } = data;
+        const patientSocketId = onlinePatients[Number(patientId)];
+        if (patientSocketId) {
+            console.log(`Doctor ${doctorId} accepted consultation with patient ${patientId}. Notifying patient.`);
+            io.to(patientSocketId).emit('consultation_accepted', { doctorId, doctorName });
+        } else {
+            console.log(`Patient ${patientId} not online to receive consultation acceptance from doctor ${doctorId}.`);
+        }
     });
 
     socket.on('disconnect', () => {

@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     li.className = 'custom-list-item'; // Changed class
                     li.innerHTML = `
                         <span>${patient.username}
-                        <span class="online-status ${patient.isOnline ? 'online' : 'offline'}"></span></span>
+                        <span class="online-status online"></span></span>
                         <button class="button-1" data-patient-id="${patient.id}" data-patient-name="${patient.username}">Chat</button>
                     `;
                     patientList.appendChild(li);
@@ -35,6 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         const patientId = e.target.getAttribute('data-patient-id');
                         const patientName = e.target.getAttribute('data-patient-name');
                         const doctorId = localStorage.getItem('userId'); // Changed to localStorage
+                        
+                        // Emit event to server that doctor accepts consultation
+                        socket.emit('doctor_accepts_consultation', { patientId: Number(patientId), doctorId: Number(doctorId), doctorName: localStorage.getItem('username') });
+
+                        // Redirect doctor to message page
                         window.location.href = `/message.html?patientId=${patientId}&patientName=${patientName}&doctorId=${doctorId}`;
                     });
                 });
