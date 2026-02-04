@@ -1,79 +1,269 @@
-.online-status {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-left: 5px;
-    background-color: grey; /* Default for offline */
+:root {
+  --ink: #0d1b1e;
+  --muted: #4b5b63;
+  --mint: #d9f4ef;
+  --teal: #2a9d8f;
+  --deep: #0f4c5c;
+  --sand: #f4efe8;
+  --card: #ffffff;
+  --accent: #ff7a59;
 }
 
-.online-status.online {
-    background-color: green;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.online-status.offline {
-    background-color: grey;
+body {
+  font-family: "IBM Plex Sans", sans-serif;
+  line-height: 1.7;
+  color: var(--ink);
+  background: radial-gradient(circle at 15% 10%, #eef7f4 0%, #f8f3ed 45%, #ffffff 100%);
 }
 
-/* Chat bubble styling */
-.chat-box {
-    height: 300px;
-    overflow-y: auto;
-    border: 1px solid #e0e0e0;
-    padding: 10px;
-    margin-bottom: 10px;
-    background-color: #f9f9f9;
-    border-radius: 5px;
+a {
+  text-decoration: none;
+  color: inherit;
 }
 
-.chat-message {
-    padding: 8px 12px;
-    border-radius: 15px;
-    margin-bottom: 5px;
-    max-width: 70%;
-    word-wrap: break-word;
-    font-size: 0.9em;
+h1, h2, h3 {
+  font-family: "Sora", sans-serif;
+  letter-spacing: -0.02em;
 }
 
-.chat-message.sent {
-    background-color: #007bff;
-    color: white;
-    margin-left: auto; /* Aligns to the right */
-    border-bottom-right-radius: 2px;
+p {
+  color: var(--muted);
+  margin: 12px 0;
 }
 
-.chat-message.received {
-    background-color: #e2e6ea;
-    color: #333;
-    margin-right: auto; /* Aligns to the left */
-    border-bottom-left-radius: 2px;
+.container {
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: 0 20px;
 }
 
-/* Video conference styling */
-.video-container {
-    position: relative;
-    width: 100%;
-    height: 60vh; /* Adjust as needed */
-    background-color: #000; /* Black background for video area */
-    border-radius: 8px;
-    overflow: hidden;
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(248, 243, 237, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(15, 76, 92, 0.08);
 }
 
-#remote-video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* Ensures the entire video is visible */
-    background-color: #000;
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 5px;
 }
 
-#local-video {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: 20%; /* Smaller size for local video */
-    height: auto;
-    border: 2px solid #fff;
-    border-radius: 8px;
-    z-index: 10;
-    background-color: #000;
+.brand {
+  font-family: "Sora", sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--deep);
 }
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 18px;
+}
+
+.nav-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 76, 92, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+}
+
+.nav-links a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px rgba(15, 76, 92, 0.15);
+  border-color: rgba(15, 76, 92, 0.25);
+}
+
+.hero {
+  position: relative;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  background:
+    linear-gradient(120deg, rgba(217, 244, 239, 0.92), rgba(244, 239, 232, 0.9));
+  padding: 28px 0 16px;
+}
+
+.hero-overlay {
+  max-width: 640px;
+}
+
+.hero-overlay h1 {
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.1;
+  color: var(--deep);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 12px;
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.lead {
+  font-size: 18px;
+  color: var(--ink);
+  max-width: 520px;
+}
+
+.hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.button-1 {
+  border: none;
+  color: #fff;
+  background: linear-gradient(135deg, var(--deep), var(--teal));
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 24px;
+  box-shadow: 0 12px 24px rgba(15, 76, 92, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-1:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(15, 76, 92, 0.25);
+}
+
+.button-ghost {
+  border: 1px solid rgba(15, 76, 92, 0.2);
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-weight: 600;
+  color: var(--deep);
+  background: #fff;
+}
+
+.purpose {
+  margin: 50px auto;
+}
+
+#home-info {
+  background: var(--card);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(13, 27, 30, 0.08);
+  padding: 40px 30px;
+}
+
+.info-content h2 {
+  font-size: clamp(24px, 3vw, 34px);
+  color: var(--deep);
+}
+
+.Enjoy {
+  color: var(--teal);
+}
+
+.features {
+  padding: 20px 0 60px;
+}
+
+.why {
+  text-align: center;
+  margin-bottom: 26px;
+  color: var(--deep);
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 26px;
+  box-shadow: 0 14px 26px rgba(13, 27, 30, 0.08);
+  border: 1px solid rgba(13, 27, 30, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-height: 240px;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 32px rgba(13, 27, 30, 0.12);
+}
+
+.card-icon {
+  font-size: 34px;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+footer {
+  margin-top: 30px;
+  background: var(--deep);
+  text-align: center;
+  color: #fff;
+  padding: 24px;
+}
+
+footer p {
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    background:
+      linear-gradient(180deg, rgba(217, 244, 239, 0.95), rgba(244, 239, 232, 0.95)),
+      url(/img/undraw_doctor_aum1.svg) no-repeat center bottom / min(70vw, 420px);
+    padding: 36px 0 36px;
+  }
+
+  .feature-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .nav-links {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .nav {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .hero {
+    min-height: 0;
+  }
+
+  .hero-cta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+
+
+

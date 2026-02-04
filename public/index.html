@@ -1,46 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telemedicine - Login</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Welcome to the Finest Traveling Experience">
+  <title>WeCare | Home</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/0ec64a7002.js" crossorigin="anonymous" defer></script>
 </head>
 <body>
-    <div class="container centered-container">
-        <div class="card login-card">
-            <div class="card-body">
-                <h3 class="card-title text-center mb-4">Telemedicine Login</h3>
-                <form id="login-form">
-                    <div class="form-group">
-                        <label for="role">I am a:</label>
-                        <select id="role" class="form-control">
-                            <option value="patients">Patient</option>
-                            <option value="doctors">Doctor</option>
-                            <option value="admins">Admin</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Login</button>
-                    <div id="error-message" class="alert alert-danger mt-3 d-none"></div>
-                </form>
-                <div class="text-center mt-3">
-                    <p>New Patient? <a href="/register.html">Create an account</a></p>
-                    <small class="form-text text-muted">Doctor: (created by admin)</small>
-                    <small class="form-text text-muted">Admin: admin/password</small>
-                </div>
-            </div>
+  <header class="site-header">
+    <nav class="nav container" id="navbar">
+      <a class="brand" href="index.html">WeCare</a>
+      <ul class="nav-links">
+        <li><a class="current" href="index.html" aria-label="Home"><i class="fa-solid fa-home"></i></a></li>
+        <li><a href="contact.html" aria-label="Contact"><i class="fa-solid fa-comment"></i></a></li>
+        <li><a href="about.html" aria-label="About"><i class="fa-solid fa-info"></i></a></li>
+        <li><a href="signup.html" aria-label="Sign up"><i class="fa-solid fa-user"></i></a></li>
+        <li><a href="admin-login.html" aria-label="Admin"><i class="fa-solid fa-lock"></i></a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="showcase">
+      <div class="container hero-overlay">
+        <p class="eyebrow">Telehealth, made human</p>
+        <h1>Healthcare. Anywhere.</h1>
+        <p class="lead">Consult licensed doctors online from the comfort of your home, with secure video calls and compassionate follow-up care.</p>
+        <div class="hero-cta">
+          <a href="login.html" class="button-1">Join Us</a>
+          <a href="contact.html" class="button-ghost">Get in Touch</a>
         </div>
-    </div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="main.js"></script>
+      </div>
+    </section>
+
+    <section id="home-info" class="purpose">
+      <div class="container info-content">
+        <h2><span class="Enjoy">Transforming Access:</span> The Purpose Behind WeCare</h2>
+        <p>
+          WeCare is created to improve access to basic medical guidance for individuals who are unable to easily reach healthcare facilities. The platform serves as a temporary and supportive solution by allowing users to create accounts and consult registered medical professionals through secure video calls or text messaging, especially when in-person care is not immediately available.
+        </p>
+        <p>
+          By connecting patients in remote or underserved areas with expert doctors, WeCare helps bridge gaps in access to healthcare and provides timely professional advice, early guidance, and follow-up support. The service is designed to be simple, confidential, and reliable, while emphasizing that online consultations complement rather than replace physical medical care.
+        </p>
+        <a href="about.html" class="button-1">Read More</a>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="container">
+        <h2 class="why">What do we do?</h2>
+        <div id="features" class="feature-grid">
+          <article class="card">
+            <i class="fas fa-stethoscope card-icon"></i>
+            <h3>Remote Medical Consultation</h3>
+            <p>Connect with licensed doctors by secure video or chat when you cannot visit a clinic.</p>
+          </article>
+          <article class="card">
+            <i class="fas fa-map-pin card-icon"></i>
+            <h3>Access for Hard-to-Reach Communities</h3>
+            <p>Support remote and underserved communities with timely, professional guidance.</p>
+          </article>
+          <article class="card">
+            <i class="fas fa-shield card-icon"></i>
+            <h3>Safe &amp; Confidential Care</h3>
+            <p>Ensure private and organized patient-doctor interactions  and protected medical information.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 TeleMed</p>
+  </footer>
 </body>
 </html>
