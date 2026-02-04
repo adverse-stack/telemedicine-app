@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeCare | Video Call</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/0ec64a7002.js" crossorigin="anonymous" defer></script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav container" id="navbar">
+            <a class="brand" href="index.html">WeCare</a>
+            <ul class="nav-links">
+                <li><a href="index.html" aria-label="Home"><i class="fa-solid fa-home"></i></a></li>
+                <li><a href="contact.html" aria-label="Contact"><i class="fa-solid fa-comment"></i></a></li>
+                <li><a href="about.html" aria-label="About"><i class="fa-solid fa-info"></i></a></li>
+                <li><a href="signup.html" aria-label="Sign up"><i class="fa-solid fa-user"></i></a></li>
+                <li><a href="admin-login.html" aria-label="Admin"><i class="fa-solid fa-lock"></i></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="video-call-page">
+        <div class="container">
+            <h2>Video Call</h2>
+            <div id="video-streams" class="video-container">
+                <video id="remote-video" autoplay playsinline></video>
+                <video id="local-video" autoplay playsinline muted></video>
+            </div>
+            <button id="end-call-btn" class="button-ghost mt-4">End Call</button>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2026 TeleMed</p>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="chat.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const room = params.get('room');
+            const isCaller = params.get('caller') === 'true';
+
+            if (room) {
+                initVideo(room, isCaller);
+            }
+
+            const endCallBtn = document.getElementById('end-call-btn');
+            if (endCallBtn) {
+                endCallBtn.addEventListener('click', () => {
+                    // Implement hang-up logic here (e.g., close peer connection, stop streams)
+                    if (localStream) {
+                        localStream.getTracks().forEach(track => track.stop());
+                    }
+                    if (peerConnection) {
+                        peerConnection.close();
+                    }
+                    // Redirect back to message page or dashboard
+                    const userRole = localStorage.getItem('userRole');
+                    if (userRole === 'patient') {
+                        const doctorId = localStorage.getItem('selectedDoctorId');
+                        window.location.href = `/message.html?doctorId=${doctorId}`;
+                    } else if (userRole === 'doctor') {
+                        // Assuming doctor can go back to dashboard
+                        window.location.href = '/doctor-dashboard.html';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

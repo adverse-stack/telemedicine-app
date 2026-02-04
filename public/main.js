@@ -197,19 +197,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (doctors.length > 0) {
                     doctors.forEach(doctor => {
                         const li = document.createElement('li');
-                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        li.className = 'custom-list-item'; // Changed class
                         li.innerHTML = `
-                            ${doctor.username} - ${doctor.profession}
-                            <button class="btn btn-sm btn-primary" data-doctor-id="${doctor.id}" data-doctor-name="${doctor.username}">Consult</button>
+                            <span>${doctor.username} - ${doctor.profession}</span>
+                            <button class="button-1" data-doctor-id="${doctor.id}" data-doctor-name="${doctor.username}">Consult</button>
                         `;
                         doctorList.appendChild(li);
                     });
                      // Add event listeners to the new "Consult" buttons
-                    doctorList.querySelectorAll('.btn-primary').forEach(button => {
+                    doctorList.querySelectorAll('.button-1').forEach(button => { // Changed query selector
                         button.addEventListener('click', async (e) => {
                             const doctorId = e.target.getAttribute('data-doctor-id');
                             const doctorName = e.target.getAttribute('data-doctor-name');
-                            const patientId = sessionStorage.getItem('userId');
+                            const patientId = localStorage.getItem('userId'); // Changed to localStorage
 
                             try {
                                 await fetch('/api/start-conversation', {
@@ -221,11 +221,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                 console.error('Failed to start conversation:', error);
                             }
                             
-                            sessionStorage.setItem('selectedDoctorId', doctorId);
+                            localStorage.setItem('selectedDoctorId', doctorId); // Changed to localStorage
                             // Redirect to the messaging page
                             window.location.href = `/message.html?doctorId=${doctorId}&doctorName=${doctorName}`;
                         });
                     });
+
 
                 } else {
                     doctorList.innerHTML = '<li class="list-group-item">No doctors found for this specialty.</li>';

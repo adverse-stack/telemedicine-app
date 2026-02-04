@@ -28,41 +28,37 @@
         <div class="container">
             <h2>Patient Dashboard</h2>
 
-            <!-- Step 1: Choose Profession -->
-            <div id="profession-selection" class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Find a Doctor</h4>
-                    <div class="form-group">
-                        <label for="profession">Select a specialty:</label>
-                        <select id="profession" class="form-control">
-                            <option value="Cardiology">Cardiology</option>
-                            <option value="Dermatology">Dermatology</option>
-                            <!-- More professions can be added here -->
-                        </select>
+            <div class="dashboard-content-grid">
+                <!-- Left Column: Find a Doctor -->
+                <div class="dashboard-col">
+                    <div id="profession-selection" class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Find a Doctor</h4>
+                            <div class="form-group">
+                                <label for="profession">Select a specialty:</label>
+                                <select id="profession" class="form-control">
+                                    <option value="Cardiology">Cardiology</option>
+                                    <option value="Dermatology">Dermatology</option>
+                                    <!-- More professions can be added here -->
+                                </select>
+                            </div>
+                            <button id="find-doctors-btn" class="button-1">Find Doctors</button>
+                        </div>
                     </div>
-                    <button id="find-doctors-btn" class="button-1">Find Doctors</button>
                 </div>
-            </div>
 
-            <!-- Step 2: Choose Doctor -->
-            <div id="doctor-list-container" class="card d-none">
-                <div class="card-body">
-                    <h4 class="card-title">Available Doctors</h4>
-                    <ul id="doctor-list" class="custom-list">
-                        <!-- Doctors will be dynamically inserted here -->
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- Step 3: Consultation Room -->
-            <div id="consultation-room" class="card d-none">
-                 <div class="card-body">
-                    <h4 class="card-title">Consultation</h4>
-                     <div class="video-container">
-                        <video id="remote-video" autoplay playsinline></video>
-                        <video id="local-video" autoplay playsinline muted></video>
+                <!-- Right Column: Available Doctors -->
+                <div class="dashboard-col">
+                    <div id="doctor-list-container" class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Available Doctors</h4>
+                            <ul id="doctor-list" class="custom-list">
+                                <!-- Doctors will be dynamically inserted here -->
+                                <li class="custom-list-item placeholder">Select a specialty and click "Find Doctors"</li>
+                            </ul>
+                        </div>
                     </div>
-                 </div>
+                </div>
             </div>
 
             <button id="logout-btn" class="button-ghost mt-4">Logout</button>

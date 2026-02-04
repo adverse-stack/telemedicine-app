@@ -84,16 +84,6 @@ socket.on('webrtc_offer', async ({ room, offer }) => {
 
     // Process any candidates that arrived early
     await processIceCandidateBuffer();
-
-    // Show the consultation room UI
-    const waitingElement = document.getElementById('waiting-for-patient');
-    if (waitingElement) {
-        waitingElement.classList.add('d-none');
-    }
-    const consultationRoom = document.getElementById('consultation-room');
-    if (consultationRoom) {
-        consultationRoom.classList.remove('d-none');
-    }
 });
 
 socket.on('webrtc_answer', async (answer) => {
@@ -116,28 +106,5 @@ socket.on('webrtc_ice_candidate', async (candidate) => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const video = params.get('video');
-    const room = params.get('room');
-    const isCaller = params.get('caller') === 'true';
-
-    if (video && room) {
-        const consultationRoom = document.getElementById('consultation-room');
-        if(consultationRoom) {
-            consultationRoom.classList.remove('d-none');
-        }
-        
-        const professionSelection = document.getElementById('profession-selection');
-        if(professionSelection) {
-            professionSelection.classList.add('d-none');
-        }
-
-        const doctorListContainer = document.getElementById('doctor-list-container');
-        if(doctorListContainer) {
-            doctorListContainer.classList.add('d-none');
-        }
-        
-        initVideo(room, isCaller);
-    }
-});
+// The DOMContentLoaded listener no longer performs UI manipulation for elements not present
+// in video-call.html. The initVideo call is handled by the script in video-call.html directly.

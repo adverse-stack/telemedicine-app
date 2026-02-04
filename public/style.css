@@ -501,3 +501,194 @@ footer p {
 
 
 
+.dashboard-content-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Single column on small screens */
+    gap: 30px;
+    margin-top: 30px;
+}
+
+@media (min-width: 768px) {
+    .dashboard-content-grid {
+        grid-template-columns: 1fr 1fr; /* Two columns on larger screens */
+    }
+}
+
+.dashboard-col {
+    /* Styles for each column if needed */
+}
+
+.message-page {
+    display: flex;
+    justify-content: center;
+    min-height: calc(100vh - 100px);
+    padding: 40px 0;
+    background: radial-gradient(circle at 15% 10%, #eef7f4 0%, #f8f3ed 45%, #ffffff 100%);
+}
+
+.message-page .container {
+    max-width: 800px; /* Adjust max width for chat */
+}
+
+.chat-card {
+    display: flex;
+    flex-direction: column;
+    height: 600px; /* Fixed height for chat card */
+}
+
+.chat-card .card-header {
+    background-color: var(--mint);
+    border-bottom: 1px solid rgba(15, 76, 92, 0.08);
+    padding: 15px 20px;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+}
+
+.chat-card .card-header .card-title {
+    margin-bottom: 0;
+    font-size: 20px;
+    color: var(--deep);
+}
+
+.chat-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow: hidden; /* Hide scrollbar for the body */
+}
+
+.chat-box {
+    flex-grow: 1;
+    overflow-y: auto; /* Scrollable chat messages */
+    padding-right: 10px; /* Space for scrollbar */
+    margin-bottom: 15px;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.chat-box::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.chat-message {
+    padding: 10px 15px;
+    border-radius: 18px;
+    margin-bottom: 10px;
+    max-width: 70%;
+    word-wrap: break-word;
+    box-shadow: 0 4px 8px rgba(13, 27, 30, 0.05);
+}
+
+.chat-message.sent {
+    background-color: var(--teal);
+    color: #fff;
+    align-self: flex-end; /* Align to the right */
+    margin-left: auto;
+}
+
+.chat-message.received {
+    background-color: var(--mint);
+    color: var(--ink);
+    align-self: flex-start; /* Align to the left */
+    margin-right: auto;
+}
+
+.chat-input-form {
+    padding-top: 15px;
+    border-top: 1px solid rgba(15, 76, 92, 0.08);
+}
+
+.chat-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input-group .form-control {
+    flex-grow: 1;
+}
+
+.chat-send-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 999px;
+}
+
+.chat-card .card-footer {
+    padding: 15px 20px;
+    border-top: 1px solid rgba(15, 76, 92, 0.08);
+    background-color: var(--sand);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 18px;
+}
+
+.chat-call-btn, .chat-back-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+/* Video Call Page specific styles */
+.video-call-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 100px);
+    padding: 20px;
+    background: radial-gradient(circle at 15% 10%, #eef7f4 0%, #f8f3ed 45%, #ffffff 100%);
+}
+
+.video-call-page .container {
+    max-width: 1000px;
+    width: 100%;
+}
+
+.video-call-page h2 {
+    color: var(--deep);
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 36px;
+}
+
+.video-call-page .video-container {
+    width: 100%;
+    height: auto;
+    padding-top: 0; /* Override default aspect ratio padding */
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    background-color: #000;
+    min-height: 500px; /* Minimum height for video area */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.video-call-page #remote-video {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ensure entire video is visible */
+}
+
+.video-call-page #local-video {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 180px;
+    height: 135px;
+    border: 3px solid var(--teal);
+    border-radius: 12px;
+    z-index: 10;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.video-call-page .button-ghost {
+    display: block;
+    margin: 30px auto 0;
+    max-width: 200px;
+    padding: 12px 25px;
+    font-size: 18px;
+}
