@@ -116,6 +116,7 @@ app.get('/api/doctors', (req, res) => {
 
 app.get('/api/doctor/patients', async (req, res) => {
     const { doctorId } = req.query;
+    console.log(`API: /api/doctor/patients called for doctor ${doctorId}`);
     try {
         const { rows } = await db.query(
             `SELECT u.id, u.username
@@ -124,13 +125,20 @@ app.get('/api/doctor/patients', async (req, res) => {
              WHERE c.doctor_id = $1 AND u.role = 'patient'`,
             [doctorId]
         );
+        console.log(`Patients from DB for doctor ${doctorId}:`, rows);
+
         // Filter to include only online patients
-        const onlineFilteredPatients = rows.filter(patient => onlinePatients.hasOwnProperty(patient.id));
+        const onlineFilteredPatients = rows.filter(patient => {
+            const isPatientOnline = onlinePatients.hasOwnProperty(patient.id);
+            console.log(`Patient ${patient.username} (ID: ${patient.id}) is online: ${isPatientOnline}`);
+            return isPatientOnline;
+        });
 
         const patientsWithOnlineStatus = onlineFilteredPatients.map(patient => ({
             ...patient,
             isOnline: true // Since we filtered, they are all online
         }));
+        console.log(`Final online patients for doctor ${doctorId}:`, patientsWithOnlineStatus);
         res.json(patientsWithOnlineStatus);
     } catch (err) {
         console.error('Error fetching doctor patients:', err);
@@ -139,6 +147,7 @@ app.get('/api/doctor/patients', async (req, res) => {
 });
 app.post('/api/start-conversation', async (req, res) => {
     const { patientId, doctorId } = req.body;
+    console.log(`API: start-conversation called for patient ${patientId} with doctor ${doctorId}`);
     try {
         // Check if conversation already exists
         const { rows } = await db.query(
@@ -148,10 +157,13 @@ app.post('/api/start-conversation', async (req, res) => {
 
         if (rows.length === 0) {
             // Create new conversation
+            console.log(`Creating new conversation between patient ${patientId} and doctor ${doctorId}`);
             await db.query(
                 'INSERT INTO conversations (patient_id, doctor_id) VALUES ($1, $2)',
                 [patientId, doctorId]
             );
+        } else {
+            console.log(`Conversation already exists between patient ${patientId} and doctor ${doctorId}`);
         }
         
         // Notify doctor of new patient
@@ -159,8 +171,11 @@ app.post('/api/start-conversation', async (req, res) => {
         if (doctorSocketId) {
             const { rows: patientRows } = await db.query('SELECT id, username FROM users WHERE id = $1', [patientId]);
             if (patientRows.length > 0) {
+                console.log(`Emitting new_patient event to doctor ${doctorId} (socket: ${doctorSocketId}) for patient:`, patientRows[0]);
                 io.to(doctorSocketId).emit('new_patient', patientRows[0]);
             }
+        } else {
+            console.log(`Doctor ${doctorId} not online or socket ID not found in onlineDoctors.`);
         }
         
         res.json({ success: true, message: 'Conversation started.' });
@@ -193,8 +208,9 @@ io.on('connection', (socket) => {
 
     socket.on('patient_joins', (data) => {
         const { patientId } = data;
-        console.log(`Patient ${patientId} is online.`);
+        console.log(`Patient ${patientId} is online. Storing socket ID: ${socket.id}`);
         onlinePatients[Number(patientId)] = socket.id; // Convert patientId to number
+        console.log('Current onlinePatients:', onlinePatients);
     });
 
     socket.on('join', (room) => {
@@ -239,7 +255,7 @@ io.on('connection', (socket) => {
             console.log(`Doctor ${doctorId} accepted consultation with patient ${patientId}. Notifying patient.`);
             io.to(patientSocketId).emit('consultation_accepted', { doctorId, doctorName });
         } else {
-            console.log(`Patient ${patientId} not online to receive consultation acceptance from doctor ${doctorId}.`);
+            console.log(`Patient ${patientId} not online to receive consultation acceptance from doctor ${doctorId}. Online patients:`, onlinePatients);
         }
     });
 
