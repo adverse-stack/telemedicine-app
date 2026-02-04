@@ -246,12 +246,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Basic session check
-    const protectedPages = ['/admin.html', '/doctor.html', '/patient.html'];
+    const protectedPages = ['/admin.html', '/doctor-dashboard.html', '/patient.html']; // Adjusted for specific dashboard pages
     if (protectedPages.includes(window.location.pathname)) {
-        const userRole = sessionStorage.getItem('userRole');
+        const userRole = localStorage.getItem('userRole'); // Use localStorage
         // If not logged in or role doesn't match page, redirect to login
-        if (!userRole || !window.location.pathname.startsWith(`/${userRole.slice(0, -1)}.html`)) {
-             window.location.href = '/';
+        if (!userRole || 
+            (window.location.pathname === '/patient.html' && userRole !== 'patient') ||
+            (window.location.pathname === '/doctor-dashboard.html' && userRole !== 'doctor') ||
+            (window.location.pathname === '/admin.html' && userRole !== 'admin')
+        ) {
+             window.location.href = 'login.html'; // Redirect to login.html
         }
 
         // Specific to admin page: fetch doctors on load
@@ -259,4 +263,5 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchDoctors();
         }
     }
+
 });

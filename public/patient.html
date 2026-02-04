@@ -3,54 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Dashboard</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>WeCare | Patient Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/0ec64a7002.js" crossorigin="anonymous" defer></script>
 </head>
 <body>
-    <div class="container mt-5">
-        <h2 class="text-center">Patient Dashboard</h2>
+    <header class="site-header">
+        <nav class="nav container" id="navbar">
+            <a class="brand" href="index.html">WeCare</a>
+            <ul class="nav-links">
+                <li><a href="index.html" aria-label="Home"><i class="fa-solid fa-home"></i></a></li>
+                <li><a href="contact.html" aria-label="Contact"><i class="fa-solid fa-comment"></i></a></li>
+                <li><a href="about.html" aria-label="About"><i class="fa-solid fa-info"></i></a></li>
+                <li><a href="signup.html" aria-label="Sign up"><i class="fa-solid fa-user"></i></a></li>
+                <li><a href="admin-login.html" aria-label="Admin"><i class="fa-solid fa-lock"></i></a></li>
+            </ul>
+        </nav>
+    </header>
 
-        <!-- Step 1: Choose Profession -->
-        <div id="profession-selection" class="card mt-4">
-            <div class="card-body">
-                <h4 class="card-title">Find a Doctor</h4>
-                <div class="form-group">
-                    <label for="profession">Select a specialty:</label>
-                    <select id="profession" class="form-control">
-                        <option value="Cardiology">Cardiology</option>
-                        <option value="Dermatology">Dermatology</option>
-                        <!-- More professions can be added here -->
-                    </select>
+    <main class="dashboard-page">
+        <div class="container">
+            <h2>Patient Dashboard</h2>
+
+            <!-- Step 1: Choose Profession -->
+            <div id="profession-selection" class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Find a Doctor</h4>
+                    <div class="form-group">
+                        <label for="profession">Select a specialty:</label>
+                        <select id="profession" class="form-control">
+                            <option value="Cardiology">Cardiology</option>
+                            <option value="Dermatology">Dermatology</option>
+                            <!-- More professions can be added here -->
+                        </select>
+                    </div>
+                    <button id="find-doctors-btn" class="button-1">Find Doctors</button>
                 </div>
-                <button id="find-doctors-btn" class="btn btn-primary">Find Doctors</button>
             </div>
-        </div>
 
-        <!-- Step 2: Choose Doctor -->
-        <div id="doctor-list-container" class="card mt-4 d-none">
-            <div class="card-body">
-                <h4 class="card-title">Available Doctors</h4>
-                <ul id="doctor-list" class="list-group">
-                    <!-- Doctors will be dynamically inserted here -->
-                </ul>
-            </div>
-        </div>
-        
-        <!-- Step 3: Consultation Room -->
-        <div id="consultation-room" class="card mt-4 d-none">
-             <div class="card-body">
-                <h4 class="card-title">Consultation</h4>
-                 <div class="video-container">
-                    <video id="remote-video" autoplay playsinline></video>
-                    <video id="local-video" autoplay playsinline muted></video>
+            <!-- Step 2: Choose Doctor -->
+            <div id="doctor-list-container" class="card d-none">
+                <div class="card-body">
+                    <h4 class="card-title">Available Doctors</h4>
+                    <ul id="doctor-list" class="custom-list">
+                        <!-- Doctors will be dynamically inserted here -->
+                    </ul>
                 </div>
-             </div>
+            </div>
+            
+            <!-- Step 3: Consultation Room -->
+            <div id="consultation-room" class="card d-none">
+                 <div class="card-body">
+                    <h4 class="card-title">Consultation</h4>
+                     <div class="video-container">
+                        <video id="remote-video" autoplay playsinline></video>
+                        <video id="local-video" autoplay playsinline muted></video>
+                    </div>
+                 </div>
+            </div>
+
+            <button id="logout-btn" class="button-ghost mt-4">Logout</button>
         </div>
+    </main>
 
-
-        <button id="logout-btn" class="btn btn-secondary mt-4">Logout</button>
-    </div>
+    <footer>
+        <p>© 2026 TeleMed</p>
+    </footer>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="chat.js"></script>
