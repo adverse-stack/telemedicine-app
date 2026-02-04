@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sign Up for WeCare Telemedicine">
+  <title>WeCare | Sign Up</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/0ec64a7002.js" crossorigin="anonymous" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container" id="navbar">
+      <a class="brand" href="index.html">WeCare</a>
+      <ul class="nav-links">
+        <li><a href="index.html" aria-label="Home"><i class="fa-solid fa-home"></i></a></li>
+        <li><a href="contact.html" aria-label="Contact"><i class="fa-solid fa-comment"></i></a></li>
+        <li><a href="about.html" aria-label="About"><i class="fa-solid fa-info"></i></a></li>
+        <li><a class="current" href="signup.html" aria-label="Sign up"><i class="fa-solid fa-user"></i></a></li>
+        <li><a href="admin-login.html" aria-label="Admin"><i class="fa-solid fa-lock"></i></a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="signup-page">
+    <div class="container login-container">
+      <h2>Patient Registration</h2>
+      <form id="signupForm">
+        <div class="form-group">
+          <label for="signupUsername">Username:</label>
+          <input type="text" id="signupUsername" name="username" required>
+        </div>
+        <div class="form-group">
+          <label for="signupPassword">Password:</label>
+          <input type="password" id="signupPassword" name="password" required>
+        </div>
+        <button type="submit" class="button-1">Register</button>
+        <p class="error-message" id="signupError"></p>
+        <p class="signup-link">Already have an account? <a href="login.html">Login Here</a></p>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2026 TeleMed</p>
+  </footer>
+
+  <script src="signup.js"></script>
+</body>
+</html>
