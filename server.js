@@ -201,6 +201,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('chat_message', async (data) => {
+        console.log('Server received chat_message:', data);
         const { room: doctorId, message, senderId } = data;
         const patientId = Number(senderId); // Ensure patientId is a number
         const doctorNumId = Number(doctorId); // Ensure doctorId is a number
@@ -208,6 +209,7 @@ io.on('connection', (socket) => {
         try {
             // Broadcast the message to the room (which is the doctorId or patientId)
             // No message saving logic as chat history is removed
+            console.log(`Server broadcasting chat_message to room ${doctorNumId}:`, { senderId, message });
             io.to(doctorNumId).emit('chat_message', { senderId, message });
         } catch (err) {
             console.error('Error broadcasting chat message:', err);
