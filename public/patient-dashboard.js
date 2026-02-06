@@ -32,23 +32,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         doctorList.appendChild(li);
                     });
                      // Add event listeners to the new "Consult" buttons
-                    doctorList.querySelectorAll('.button-1').forEach(button => { // Changed query selector
+                    doctorList.querySelectorAll('.button-1').forEach(button => {
                         button.addEventListener('click', async (e) => {
-                            const doctorId = Number(e.target.getAttribute('data-doctor-id')); // Cast to Number
+                            const doctorId = Number(e.target.getAttribute('data-doctor-id'));
                             const doctorName = e.target.getAttribute('data-doctor-name');
-                            const patientId = Number(localStorage.getItem('userId')); // Cast to Number
+                            const patientId = Number(localStorage.getItem('userId'));
+                            const patientUsername = localStorage.getItem('username'); // Get patient's username
 
-                            try {
-                                await fetch('/api/start-conversation', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ patientId, doctorId }), // Sending numbers
-                                });
-                            } catch (error) {
-                                console.error('Failed to start conversation:', error);
-                            }
+                            socket.emit('patient_requests_consultation', {
+                                patientId: patientId,
+                                patientName: patientUsername,
+                                doctorId: doctorId,
+                                doctorName: doctorName
+                            });
                             
-                            localStorage.setItem('selectedDoctorId', doctorId); // Changed to localStorage
+                            localStorage.setItem('selectedDoctorId', doctorId);
                             // Redirect to the waiting room page
                             window.location.href = `/waiting-room.html?doctorId=${doctorId}&doctorName=${doctorName}`;
                         });

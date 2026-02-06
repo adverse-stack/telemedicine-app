@@ -123,51 +123,23 @@ app.get('/api/doctor/patients', async (req, res) => {
              WHERE c.doctor_id = $1 AND u.role = 'patient'`,
             [doctorId]
         );
-        // Filter to include only online patients
-        const onlineFilteredPatients = rows.filter(patient => onlinePatients.hasOwnProperty(patient.id));
+        // Filter to include only online patients and get their current status
+        const patientsWithOnlineStatus = rows.map(patient => {
+            const onlinePatient = onlinePatients[patient.id];
+            return {
+                id: patient.id,
+                username: patient.username,
+                isOnline: !!onlinePatient // True if onlinePatient exists
+            };
+        }).filter(patient => patient.isOnline); // Only keep online patients
 
-        const patientsWithOnlineStatus = onlineFilteredPatients.map(patient => ({
-            ...patient,
-            isOnline: true // Since we filtered, they are all online
-        }));
         res.json(patientsWithOnlineStatus);
     } catch (err) {
         console.error('Error fetching doctor patients:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
-app.post('/api/start-conversation', async (req, res) => {
-    const { patientId, doctorId } = req.body;
-    try {
-        // Check if conversation already exists
-        const { rows } = await db.query(
-            'SELECT id FROM conversations WHERE patient_id = $1 AND doctor_id = $2',
-            [patientId, doctorId]
-        );
 
-        if (rows.length === 0) {
-            // Create new conversation
-            await db.query(
-                'INSERT INTO conversations (patient_id, doctor_id) VALUES ($1, $2)',
-                [patientId, doctorId]
-            );
-        }
-        
-        // Notify doctor of new patient
-        const doctorSocketId = onlineDoctors[Number(doctorId)]?.socketId; // Ensure doctorId is number
-        if (doctorSocketId) {
-            const { rows: patientRows } = await db.query('SELECT id, username FROM users WHERE id = $1', [patientId]);
-            if (patientRows.length > 0) {
-                io.to(doctorSocketId).emit('new_patient', patientRows[0]);
-            }
-        }
-        
-        res.json({ success: true, message: 'Conversation started.' });
-    } catch (err) {
-        console.error('Error starting conversation:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
 
 
 // Socket.IO Connection Handling
@@ -187,9 +159,54 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('patient_joins', (data) => {
+    socket.on('patient_joins', async (data) => {
         const { patientId } = data;
-        onlinePatients[Number(patientId)] = socket.id; // Convert patientId to number
+        const patientNumId = Number(patientId); // Convert to number
+        try {
+            // Fetch patient details from DB
+            const { rows } = await db.query('SELECT id, username FROM users WHERE id = $1 AND role = \'patient\'', [patientNumId]);
+            const patient = rows[0];
+            if (patient) {
+                onlinePatients[patient.id] = { ...patient, socketId: socket.id };
+            }
+        } catch (err) {
+            console.error('Error fetching patient details:', err);
+        }
+    });
+
+    socket.on('patient_requests_consultation', async (data) => {
+        const { patientId, patientName, doctorId, doctorName } = data;
+        try {
+            // Check if conversation already exists
+            let conversationId;
+            const { rows } = await db.query(
+                'SELECT id FROM conversations WHERE patient_id = $1 AND doctor_id = $2',
+                [patientId, doctorId]
+            );
+
+            if (rows.length === 0) {
+                // Create new conversation
+                const newConv = await db.query(
+                    'INSERT INTO conversations (patient_id, doctor_id) VALUES ($1, $2) RETURNING id',
+                    [patientId, doctorId]
+                );
+                conversationId = newConv.rows[0].id;
+            } else {
+                conversationId = rows[0].id;
+            }
+            
+            // Notify doctor of new patient request
+            const doctorSocket = onlineDoctors[Number(doctorId)];
+            if (doctorSocket && doctorSocket.socketId) {
+                io.to(doctorSocket.socketId).emit('new_patient_request', {
+                    patientId: patientId,
+                    patientName: patientName,
+                    conversationId: conversationId
+                });
+            }
+        } catch (err) {
+            console.error('Error handling patient_requests_consultation:', err);
+        }
     });
 
     socket.on('join', (room) => {
@@ -225,12 +242,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('doctor_accepts_consultation', (data) => {
-        const { patientId, doctorId, doctorName } = data;
-        const patientSocketId = onlinePatients[Number(patientId)];
-        if (patientSocketId) {
-            io.to(patientSocketId).emit('consultation_accepted', { doctorId, doctorName });
+        const { patientId, doctorId, doctorName, conversationId } = data;
+        const patientSocket = onlinePatients[Number(patientId)];
+        if (patientSocket && patientSocket.socketId) {
+            io.to(patientSocket.socketId).emit('consultation_accepted', { doctorId, doctorName, conversationId });
         } else {
-            // Patient not online or socket ID not found
+            console.log(`Patient ${patientId} not online or socket ID not found.`);
         }
     });
 
@@ -245,7 +262,7 @@ io.on('connection', (socket) => {
 
         // Find and remove the patient from onlinePatients if they disconnect
         const disconnectedPatientId = Object.keys(onlinePatients).find(
-            id => onlinePatients[id] === socket.id
+            id => onlinePatients[id]?.socketId === socket.id
         );
         if (disconnectedPatientId) {
             delete onlinePatients[disconnectedPatientId];

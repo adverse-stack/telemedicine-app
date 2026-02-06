@@ -17,10 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for the doctor's acceptance
     socket.on('consultation_accepted', (data) => {
-        const { doctorId: acceptedDoctorId, doctorName: acceptedDoctorName } = data;
+        const { doctorId: acceptedDoctorId, doctorName: acceptedDoctorName, conversationId } = data;
         // Ensure it's for the current doctor the patient is waiting for
         if (Number(acceptedDoctorId) === Number(doctorId)) {
-            window.location.href = `/message.html?doctorId=${doctorId}&doctorName=${doctorName}&patientId=${patientId}&patientName=${patientUsername}`; // Pass patient details for message.js
+            window.location.href = `/message.html?doctorId=${doctorId}&doctorName=${doctorName}&patientId=${patientId}&patientName=${patientUsername}&conversationId=${conversationId}`; // Pass patient details for message.js
         }
     });
 

@@ -9,10 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const backBtn = document.getElementById('back-btn');
 
     const params = new URLSearchParams(window.location.search);
-    const doctorIdParam = params.get('doctorId'); // Doctor ID from URL (for patient)
-    const doctorNameParam = params.get('doctorName'); // Doctor Name from URL (for patient)
-    const patientIdParam = params.get('patientId'); // Patient ID from URL (for doctor)
-    const patientNameParam = params.get('patientName'); // Patient Name from URL (for doctor)
+    const doctorIdParam = params.get('doctorId');
+    const doctorNameParam = params.get('doctorName');
+    const patientIdParam = params.get('patientId');
+    const patientNameParam = params.get('patientName');
+    const conversationId = params.get('conversationId'); // Get conversation ID from URL
 
     const currentUserId = localStorage.getItem('userId');
     const currentUserRole = localStorage.getItem('userRole');
@@ -21,16 +22,33 @@ document.addEventListener('DOMContentLoaded', () => {
     let room;
     let participantId; // The ID of the person we are chatting with
 
-    if (currentUserRole === 'patient') {
-        room = doctorIdParam; // Patient uses doctor's ID as room
-        participantId = doctorIdParam;
-        chatWithName.textContent = `Chat with ${doctorNameParam}`;
-        socket.emit('patient_joins', { patientId: currentUserId });
-    } else if (currentUserRole === 'doctor') {
-        room = patientIdParam; // Doctor uses patient's ID as room
-        participantId = patientIdParam;
-        chatWithName.textContent = `Chat with ${patientNameParam}`;
+    // Determine the room based on the conversationId
+    if (conversationId) {
+        room = conversationId;
+        // Set participantId and chatWithName based on role
+        if (currentUserRole === 'patient') {
+            participantId = doctorIdParam;
+            chatWithName.textContent = `Chat with ${doctorNameParam}`;
+        } else if (currentUserRole === 'doctor') {
+            participantId = patientIdParam;
+            chatWithName.textContent = `Chat with ${patientNameParam}`;
+        }
+    } else {
+        // Fallback or error handling if conversationId is missing
+        console.error('Conversation ID missing from URL.');
+        // Potentially redirect to a dashboard or error page
+        if (currentUserRole === 'patient') {
+            window.location.href = '/patient-dashboard.html';
+        } else if (currentUserRole === 'doctor') {
+            window.location.href = '/doctor-dashboard.html';
+        }
+        return; // Stop further execution
     }
+    
+    // The patient_joins event is now handled by patient-dashboard.js
+    // if (currentUserRole === 'patient') {
+    //     socket.emit('patient_joins', { patientId: currentUserId });
+    // }
 
     if (room) {
         socket.emit('join', room);
@@ -41,21 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
     chatForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const message = chatInput.value;
-        if (message.trim() && room) {
-            // For chat, doctorId is the room, patientId is the sender for patients.
-            // For doctors, the room should be the patientId, and senderId is doctorId.
-            let chatRoomId = doctorIdParam; // For patient sending, room is the doctor's ID
-            let chatSenderId = currentUserId;
-
-            if (currentUserRole === 'doctor') {
-                chatRoomId = patientIdParam; // For doctor sending, room is the patient's ID
-                chatSenderId = currentUserId;
-            } else if (currentUserRole === 'patient') {
-                chatRoomId = doctorIdParam;
-                chatSenderId = currentUserId;
-            }
-
-            socket.emit('chat_message', { room: chatRoomId, message, senderId: chatSenderId });
+        if (message.trim() && conversationId) { // Use conversationId
+            socket.emit('chat_message', { room: conversationId, message, senderId: currentUserId });
             chatInput.value = '';
         }
     });
@@ -74,20 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     callBtn.addEventListener('click', () => {
-        let videoRoomId;
-        let isCaller;
-
-        if (currentUserRole === 'patient') {
-            videoRoomId = doctorIdParam;
-            isCaller = true;
-            localStorage.setItem('selectedDoctorId', doctorIdParam); // Keep this for patient context
-        } else if (currentUserRole === 'doctor') {
-            videoRoomId = patientIdParam; // Doctor calls patient
-            isCaller = true; // Doctor is the caller in this case
-        }
-        
-        // Redirect to the dedicated video call page
-        window.location.href = `/video-call.html?room=${videoRoomId}&caller=${isCaller}`;
+        // Redirect to the dedicated video call page, using conversationId as the room
+        const isCaller = currentUserRole === 'patient'; // Patient is always the caller when initiating from message page
+        window.location.href = `/video-call.html?room=${conversationId}&caller=${isCaller}`;
     });
 
     backBtn.addEventListener('click', () => {
