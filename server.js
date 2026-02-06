@@ -182,22 +182,29 @@ io.on('connection', (socket) => {
         try {
             // Check if conversation already exists
             let conversationId;
+            console.log(`[SERVER] Checking for existing conversation for patient ${patientId} and doctor ${doctorId}`);
             const { rows } = await db.query(
                 'SELECT id FROM conversations WHERE patient_id = $1 AND doctor_id = $2',
                 [patientId, doctorId]
             );
+            console.log(`[SERVER] Existing conversation query result:`, rows);
 
             if (rows.length === 0) {
+                console.log(`[SERVER] No existing conversation. Creating new one.`);
                 // Create new conversation
                 const newConv = await db.query(
                     'INSERT INTO conversations (patient_id, doctor_id) VALUES ($1, $2) RETURNING id',
                     [patientId, doctorId]
                 );
                 conversationId = newConv.rows[0].id;
+                console.log(`[SERVER] New conversation created with ID: ${conversationId}`);
             } else {
                 conversationId = rows[0].id;
+                console.log(`[SERVER] Found existing conversation with ID: ${conversationId}`);
             }
             
+            console.log(`[SERVER] Final conversationId before emitting new_patient_request: ${conversationId}`);
+
             // Notify doctor of new patient request
             const doctorSocket = onlineDoctors[Number(doctorId)];
             if (doctorSocket && doctorSocket.socketId) {

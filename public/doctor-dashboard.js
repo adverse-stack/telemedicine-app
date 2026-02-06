@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const doctorId = localStorage.getItem('userId');
             const doctorName = localStorage.getItem('username'); // Get doctor's username for emit
 
-            socket.emit('doctor_accepts_consultation', { patientId: Number(patientId), doctorId: Number(doctorId), doctorName: doctorName, conversationId: Number(conversationId) });
+            socket.emit('doctor_accepts_consultation', { patientId: Number(patientId), doctorId: Number(doctorId), doctorName: username, conversationId: Number(conversationId) });
 
             window.location.href = `/message.html?patientId=${patientId}&patientName=${patientName}&doctorId=${doctorId}&doctorName=${username}&conversationId=${conversationId}`;
         });
