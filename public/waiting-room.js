@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const patientUsername = localStorage.getItem('username');
 
     if (!doctorId || !patientId) {
-        console.error('Missing doctorId or patientId in waiting room. Redirecting to patient dashboard.');
-        window.location.href = '/patient.html'; // Redirect to patient dashboard
+        console.error('Missing doctorId or patientId in waiting room. Redirecting to home page.');
+        window.location.href = '/index.html'; // Redirect to home page
         return;
     }
 
