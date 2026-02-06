@@ -20,6 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const { doctorId: acceptedDoctorId, doctorName: acceptedDoctorName, conversationId } = data;
         // Ensure it's for the current doctor the patient is waiting for
         if (Number(acceptedDoctorId) === Number(doctorId)) {
+            console.log('Redirecting patient to message.html with params:', {
+                doctorId: doctorId,
+                doctorName: doctorName,
+                patientId: patientId,
+                patientName: patientUsername,
+                conversationId: conversationId
+            });
             window.location.href = `/message.html?doctorId=${doctorId}&doctorName=${doctorName}&patientId=${patientId}&patientName=${patientUsername}&conversationId=${conversationId}`; // Pass patient details for message.js
         }
     });

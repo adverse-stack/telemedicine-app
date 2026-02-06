@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     socket.on('new_patient_request', (patient) => {
         // Patient data now includes conversationId from server
-        addPatientToList(patient);
+        addPatientToList({ ...patient, isOnline: true }); // Explicitly set isOnline for new requests
     });
 
     logoutBtn.addEventListener('click', () => {

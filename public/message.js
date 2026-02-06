@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const patientNameParam = params.get('patientName');
     const conversationId = params.get('conversationId'); // Get conversation ID from URL
 
+    console.log('Message.js URL Params:', {
+        doctorIdParam,
+        doctorNameParam,
+        patientIdParam,
+        patientNameParam,
+        conversationId
+    });
+
     const currentUserId = localStorage.getItem('userId');
     const currentUserRole = localStorage.getItem('userRole');
     const currentUsername = localStorage.getItem('username');
