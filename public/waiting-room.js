@@ -1,10 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const userId = localStorage.getItem('userId');
+    const username = localStorage.getItem('username');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!userId || !username || userRole !== 'patient') {
+        console.warn('Patient session data missing or invalid for waiting room. Redirecting to login.');
+        localStorage.clear();
+        window.location.href = 'login.html';
+        return; // Stop execution if not authenticated
+    }
+
     const socket = io();
     const params = new URLSearchParams(window.location.search);
     const doctorId = params.get('doctorId');
     const doctorName = params.get('doctorName');
-    const patientId = localStorage.getItem('userId');
-    const patientUsername = localStorage.getItem('username');
+    const patientId = userId; // Use verified userId
+    const patientUsername = username; // Use verified username
 
     if (!doctorId || !patientId) {
         console.error('Missing doctorId or patientId in waiting room. Redirecting to patient dashboard.');

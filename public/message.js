@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const userId = localStorage.getItem('userId');
+    const username = localStorage.getItem('username');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!userId || !username || !userRole) {
+        console.warn('Session data missing or invalid for message page. Redirecting to login.');
+        localStorage.clear();
+        window.location.href = 'login.html';
+        return; // Stop execution if not authenticated
+    }
+
     const socket = io();
 
     const chatWithName = document.getElementById('chat-with-name');
@@ -23,9 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
         conversationId
     });
 
-    const currentUserId = localStorage.getItem('userId');
-    const currentUserRole = localStorage.getItem('userRole');
-    const currentUsername = localStorage.getItem('username');
+    const currentUserId = userId; // Use verified userId
+    const currentUserRole = userRole; // Use verified userRole
+    const currentUsername = username; // Use verified username
 
     let room;
     let participantId; // The ID of the person we are chatting with

@@ -1,31 +1,45 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const userId = localStorage.getItem('userId');
+    const username = localStorage.getItem('username');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!userId || !username || userRole !== 'doctor') {
+        console.warn('Doctor session data missing or invalid. Redirecting to login.');
+        localStorage.clear();
+        window.location.href = 'login.html';
+        return; // Stop execution if not authenticated
+    }
+
     const socket = io();
     const patientList = document.getElementById('patient-list');
     const logoutBtn = document.getElementById('logout-btn');
 
-    const doctorId = localStorage.getItem('userId');
+    const doctorId = userId; // Use the verified userId
 
     if (doctorId) {
         socket.emit('doctor_joins', { userId: doctorId });
     }
 
     // Helper function to add/update a patient in the list
-    const addPatientToList = (patient) => {
-        let patientItem = document.getElementById(`patient-${patient.id}`);
+    const addPatientToList = (user) => {
+        const id = user.id || user.patientId; // Handle both structures (id from fetch, patientId from socket event)
+        const username = user.username || user.patientName; // Handle both structures
+
+        let patientItem = document.getElementById(`patient-${id}`);
         if (!patientItem) {
             patientItem = document.createElement('li');
             patientItem.className = 'custom-list-item';
-            patientItem.id = `patient-${patient.id}`;
+            patientItem.id = `patient-${id}`;
             patientList.appendChild(patientItem);
         }
         
-        // Ensure patient.conversationId is available if adding from new_patient_request
-        const conversationId = patient.conversationId || '';
+        // conversationId will be present for new requests and in the redirect URL after doctor accepts
+        const conversationId = user.conversationId || ''; 
 
         patientItem.innerHTML = `
-            <span>${patient.username}
-            <span class="online-status ${patient.isOnline ? 'online' : 'offline'}"></span></span>
-            <button class="button-1" data-patient-id="${patient.id}" data-patient-name="${patient.username}" data-conversation-id="${conversationId}">Chat</button>
+            <span>${username}
+            <span class="online-status ${user.isOnline ? 'online' : 'offline'}"></span></span>
+            <button class="button-1" data-patient-id="${id}" data-patient-name="${username}" data-conversation-id="${conversationId}">Chat</button>
         `;
 
         patientItem.querySelector('.button-1').addEventListener('click', (e) => {
@@ -33,10 +47,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const patientName = e.target.getAttribute('data-patient-name');
             const conversationId = e.target.getAttribute('data-conversation-id');
             const doctorId = localStorage.getItem('userId');
-            
-            socket.emit('doctor_accepts_consultation', { patientId: Number(patientId), doctorId: Number(doctorId), doctorName: localStorage.getItem('username'), conversationId: Number(conversationId) });
+            const doctorName = localStorage.getItem('username'); // Get doctor's username for emit
 
-            window.location.href = `/message.html?patientId=${patientId}&patientName=${patientName}&doctorId=${doctorId}&conversationId=${conversationId}`;
+            socket.emit('doctor_accepts_consultation', { patientId: Number(patientId), doctorId: Number(doctorId), doctorName: doctorName, conversationId: Number(conversationId) });
+
+            window.location.href = `/message.html?patientId=${patientId}&patientName=${patientName}&doctorId=${doctorId}&doctorName=${doctorName}&conversationId=${conversationId}`;
         });
     };
 
@@ -48,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             patientList.innerHTML = ''; // Clear previous list
             if (patients.length > 0) {
-                patients.forEach(patient => addPatientToList(patient));
+                patients.forEach(patient => addPatientToList(patient)); // Pass patient directly, it has id, username, isOnline
             } else {
                 patientList.innerHTML = '<li class="custom-list-item placeholder">No patients have started a conversation yet.</li>';
             }
@@ -63,8 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     socket.on('new_patient_request', (patient) => {
-        // Patient data now includes conversationId from server
-        addPatientToList({ ...patient, isOnline: true }); // Explicitly set isOnline for new requests
+        // Patient data now includes conversationId from server, needs id/username for addPatientToList
+        addPatientToList({ id: patient.patientId, username: patient.patientName, conversationId: patient.conversationId, isOnline: true });
     });
 
     logoutBtn.addEventListener('click', () => {

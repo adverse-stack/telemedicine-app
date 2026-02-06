@@ -1,9 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const userId = localStorage.getItem('userId');
+    const username = localStorage.getItem('username');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!userId || !username || userRole !== 'patient') {
+        console.warn('Patient session data missing or invalid. Redirecting to login.');
+        localStorage.clear();
+        window.location.href = 'login.html';
+        return; // Stop execution if not authenticated
+    }
+
     const socket = io();
     const findDoctorsBtn = document.getElementById('find-doctors-btn');
     const logoutBtn = document.getElementById('logout-btn');
 
-    const patientId = localStorage.getItem('userId');
+    const patientId = userId; // Use the verified userId
     if (patientId) {
         socket.emit('patient_joins', { patientId: patientId });
     }
