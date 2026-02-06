@@ -3,8 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const username = localStorage.getItem('username');
     const userRole = localStorage.getItem('userRole');
 
+    console.log('[patient-dashboard.js] localStorage on load - userId:', userId, 'username:', username, 'userRole:', userRole);
+
     if (!userId || !username || userRole !== 'patient') {
-        console.warn('Patient session data missing or invalid. Redirecting to login.');
+        console.warn('Patient session data missing or user role mismatch. Redirecting to login.');
         localStorage.clear();
         window.location.href = 'login.html';
         return; // Stop execution if not authenticated
