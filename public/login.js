@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Redirect based on role
                 if (data.role === 'patient') {
-                    window.location.href = 'index.html'; // Assuming index.html is the patient dashboard
+                    window.location.href = 'patient-dashboard.html'; // Assuming patient-dashboard.html is the patient dashboard
                 } else if (data.role === 'doctor') {
                     window.location.href = 'doctor-dashboard.html'; // Assuming doctor-dashboard.html is the doctor dashboard
                 }

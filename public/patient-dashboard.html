@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeCare | Patient Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/0ec64a7002.js" crossorigin="anonymous" defer></script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav container" id="navbar">
+            <a class="brand" href="index.html">WeCare</a>
+            <ul class="nav-links">
+                <li><a href="index.html" aria-label="Home"><i class="fa-solid fa-home"></i></a></li>
+                <li><a href="contact.html" aria-label="Contact"><i class="fa-solid fa-comment"></i></a></li>
+                <li><a href="about.html" aria-label="About"><i class="fa-solid fa-info"></i></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="dashboard-page">
+        <div class="container">
+            <h2>Patient Dashboard</h2>
+
+            <div class="dashboard-content-grid">
+                <!-- Left Column: Find a Doctor -->
+                <div class="dashboard-col">
+                    <div id="profession-selection" class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Find a Doctor</h4>
+                            <div class="form-group">
+                                <label for="profession">Select a specialty:</label>
+                                <select id="profession" class="form-control">
+                                    <option value="Cardiology">Cardiology</option>
+                                    <option value="Dermatology">Dermatology</option>
+                                    <!-- More professions can be added here -->
+                                </select>
+                            </div>
+                            <button id="find-doctors-btn" class="button-1">Find Doctors</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Available Doctors -->
+                <div class="dashboard-col">
+                    <div id="doctor-list-container" class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Available Doctors</h4>
+                            <ul id="doctor-list" class="custom-list">
+                                <!-- Doctors will be dynamically inserted here -->
+                                <li class="custom-list-item placeholder">Select a specialty and click "Find Doctors"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button id="logout-btn" class="button-ghost mt-4">Logout</button>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2026 TeleMed</p>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="patient-dashboard.js"></script>
+</body>
+</html>

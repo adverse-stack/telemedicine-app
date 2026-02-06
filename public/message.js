@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     backBtn.addEventListener('click', () => {
         if (currentUserRole === 'patient') {
-            window.location.href = '/index.html';
+            window.location.href = '/patient-dashboard.html';
         } else if (currentUserRole === 'doctor') {
             window.location.href = '/doctor-dashboard.html';
         }
