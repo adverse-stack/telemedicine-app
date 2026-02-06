@@ -234,8 +234,7 @@ footer p {
 @media (max-width: 900px) {
   .hero {
     background:
-      linear-gradient(180deg, rgba(217, 244, 239, 0.95), rgba(244, 239, 232, 0.95)),
-      url(/img/undraw_doctor_aum1.svg) no-repeat center bottom / min(70vw, 420px);
+      linear-gradient(180deg, rgba(217, 244, 239, 0.95), rgba(244, 239, 232, 0.95));
     padding: 36px 0 36px;
   }
 
