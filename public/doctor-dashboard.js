@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             socket.emit('doctor_accepts_consultation', { patientId: Number(patientId), doctorId: Number(doctorId), doctorName: doctorName, conversationId: Number(conversationId) });
 
-            window.location.href = `/message.html?patientId=${patientId}&patientName=${patientName}&doctorId=${doctorId}&doctorName=${doctorName}&conversationId=${conversationId}`;
+            window.location.href = `/message.html?patientId=${patientId}&patientName=${patientName}&doctorId=${doctorId}&doctorName=${username}&conversationId=${conversationId}`;
         });
     };
 

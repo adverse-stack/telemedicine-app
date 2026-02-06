@@ -49,12 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         button.addEventListener('click', async (e) => {
                             const doctorId = Number(e.target.getAttribute('data-doctor-id'));
                             const doctorName = e.target.getAttribute('data-doctor-name');
-                            const patientId = Number(localStorage.getItem('userId'));
-                            const patientUsername = localStorage.getItem('username'); // Get patient's username
+                            // Use the verified userId and username from the session check
+                            const currentPatientId = userId; 
+                            const currentPatientUsername = username;
 
                             socket.emit('patient_requests_consultation', {
-                                patientId: patientId,
-                                patientName: patientUsername,
+                                patientId: currentPatientId,
+                                patientName: currentPatientUsername,
                                 doctorId: doctorId,
                                 doctorName: doctorName
                             });
