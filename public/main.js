@@ -92,16 +92,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Store user info in session storage
-                    sessionStorage.setItem('userRole', role);
-                    sessionStorage.setItem('userId', data.userId);
-                    sessionStorage.setItem('username', username);
+                    // Store user info in local storage
+                    localStorage.setItem('userRole', role);
+                    localStorage.setItem('userId', data.userId);
+                    localStorage.setItem('username', username);
 
                     // Redirect based on role
                     if (role === 'doctors') {
                         window.location.href = '/doctor-dashboard.html';
-                    } else {
-                        window.location.href = `/${role.slice(0, -1)}.html`;
+                    } else if (role === 'patients') {
+                        window.location.href = '/index.html'; // Changed from patient.html
                     }
                 } else {
                     errorMessage.textContent = data.message;
@@ -241,18 +241,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle Logout
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
-            sessionStorage.clear();
-            window.location.href = '/';
+            localStorage.clear();
+            window.location.href = 'login.html';
         });
     }
 
     // Basic session check
-    const protectedPages = ['/admin.html', '/doctor-dashboard.html', '/patient.html']; // Adjusted for specific dashboard pages
+    const protectedPages = ['/admin.html', '/doctor-dashboard.html']; // Adjusted for specific dashboard pages
     if (protectedPages.includes(window.location.pathname)) {
         const userRole = localStorage.getItem('userRole'); // Use localStorage
         // If not logged in or role doesn't match page, redirect to login
         if (!userRole || 
-            (window.location.pathname === '/patient.html' && userRole !== 'patient') ||
             (window.location.pathname === '/doctor-dashboard.html' && userRole !== 'doctor') ||
             (window.location.pathname === '/admin.html' && userRole !== 'admin')
         ) {

@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('logout-btn');
 
     const doctorId = localStorage.getItem('userId'); // Changed to localStorage
-    console.log(`Doctor Dashboard loaded. Doctor ID from localStorage: ${doctorId}`);
 
     if (doctorId) {
         // Announce that doctor is online
@@ -13,11 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch patients who have conversations with the doctor
     const fetchPatients = async () => {
-        console.log('Fetching patients for doctor:', doctorId);
         try {
             const response = await fetch(`/api/doctor/patients?doctorId=${doctorId}`);
             const patients = await response.json();
-            console.log('Received patients from API:', patients);
 
             patientList.innerHTML = ''; // Clear previous list
             if (patients.length > 0) {
@@ -61,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     socket.on('new_patient', (patient) => {
-        console.log('Received new_patient event:', patient);
         fetchPatients();
     });
 

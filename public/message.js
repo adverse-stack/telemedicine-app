@@ -14,9 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const patientIdParam = params.get('patientId'); // Patient ID from URL (for doctor)
     const patientNameParam = params.get('patientName'); // Patient Name from URL (for doctor)
 
-    console.log('message.js loaded.');
-    console.log('URL parameters:', { doctorIdParam, doctorNameParam, patientIdParam, patientNameParam });
-
     const currentUserId = localStorage.getItem('userId');
     const currentUserRole = localStorage.getItem('userRole');
     const currentUsername = localStorage.getItem('username');
@@ -58,14 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 chatSenderId = currentUserId;
             }
 
-            console.log('Emitting chat_message:', { room: chatRoomId, message, senderId: chatSenderId });
             socket.emit('chat_message', { room: chatRoomId, message, senderId: chatSenderId });
             chatInput.value = '';
         }
     });
 
     socket.on('chat_message', (data) => {
-        console.log('Received chat_message:', data);
         const messageType = data.senderId == currentUserId ? 'sent' : 'received';
         appendMessage(data.message, messageType);
     });
@@ -97,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     backBtn.addEventListener('click', () => {
         if (currentUserRole === 'patient') {
-            window.location.href = '/patient.html';
+            window.location.href = '/index.html';
         } else if (currentUserRole === 'doctor') {
             window.location.href = '/doctor-dashboard.html';
         }
