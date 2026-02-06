@@ -1,6 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const socket = io();
     const findDoctorsBtn = document.getElementById('find-doctors-btn');
     const logoutBtn = document.getElementById('logout-btn');
+
+    const patientId = localStorage.getItem('userId');
+    if (patientId) {
+        socket.emit('patient_joins', { patientId: patientId });
+    }
+
 
     // Handle Patient: Find Doctors
     if (findDoctorsBtn) {
