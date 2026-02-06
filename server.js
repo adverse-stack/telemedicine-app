@@ -168,6 +168,7 @@ io.on('connection', (socket) => {
             const patient = rows[0];
             if (patient) {
                 onlinePatients[patient.id] = { ...patient, socketId: socket.id };
+                console.log(`[SERVER] Patient ${patient.username} (${patient.id}) joined. Stored in onlinePatients:`, onlinePatients[patient.id]);
             }
         } catch (err) {
             console.error('Error fetching patient details:', err);
@@ -176,6 +177,7 @@ io.on('connection', (socket) => {
 
     socket.on('patient_requests_consultation', async (data) => {
         const { patientId, patientName, doctorId, doctorName } = data;
+        console.log(`[SERVER] Patient ${patientName} (${patientId}) requests consultation with Doctor ${doctorName} (${doctorId}).`);
         try {
             // Check if conversation already exists
             let conversationId;
@@ -203,6 +205,9 @@ io.on('connection', (socket) => {
                     patientName: patientName,
                     conversationId: conversationId
                 });
+                console.log(`[SERVER] Emitted new_patient_request for patient ${patientName} (${patientId}) to doctor ${doctorSocket.username} (${doctorId})`);
+            } else {
+                console.log(`[SERVER] Doctor ${doctorId} not online, cannot emit new_patient_request.`);
             }
         } catch (err) {
             console.error('Error handling patient_requests_consultation:', err);
@@ -211,6 +216,7 @@ io.on('connection', (socket) => {
 
     socket.on('join', (room) => {
         socket.join(room);
+        console.log(`[SERVER] Socket ${socket.id} joined room ${room}`);
     });
 
     socket.on('chat_message', async (data) => {
@@ -220,6 +226,7 @@ io.on('connection', (socket) => {
 
         try {
             io.to(numericRoom).emit('chat_message', { senderId: numericSenderId, message });
+            console.log(`[SERVER] Chat message from ${senderId} to room ${room}: ${message}`);
         } catch (err) {
             console.error('Error broadcasting chat message:', err);
         }
@@ -229,25 +236,30 @@ io.on('connection', (socket) => {
     socket.on('webrtc_offer', (data) => {
         const { room } = data;
         io.to(Number(room)).emit('webrtc_offer', data); // Ensure room is a number for Socket.IO room
+        console.log(`[SERVER] WebRTC offer for room ${room}`);
     });
 
     socket.on('webrtc_answer', (data) => {
         const { room, answer } = data;
         io.to(Number(room)).emit('webrtc_answer', answer); // Ensure room is a number
+        console.log(`[SERVER] WebRTC answer for room ${room}`);
     });
 
     socket.on('webrtc_ice_candidate', (data) => {
         const { room, candidate } = data;
         io.to(Number(room)).emit('webrtc_ice_candidate', candidate); // Ensure room is a number
+        console.log(`[SERVER] WebRTC ICE candidate for room ${room}`);
     });
 
     socket.on('doctor_accepts_consultation', (data) => {
         const { patientId, doctorId, doctorName, conversationId } = data;
+        console.log(`[SERVER] Doctor ${doctorName} (${doctorId}) accepts consultation for patient ${patientId} (Conversation: ${conversationId})`);
         const patientSocket = onlinePatients[Number(patientId)];
         if (patientSocket && patientSocket.socketId) {
             io.to(patientSocket.socketId).emit('consultation_accepted', { doctorId, doctorName, conversationId });
+            console.log(`[SERVER] Emitted consultation_accepted to patient ${patientId} (socket: ${patientSocket.socketId})`);
         } else {
-            console.log(`Patient ${patientId} not online or socket ID not found.`);
+            console.log(`[SERVER] Patient ${patientId} not online or socket ID not found. patientSocket:`, patientSocket);
         }
     });
 
