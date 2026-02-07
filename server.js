@@ -141,20 +141,6 @@ app.get('/api/doctor/patients', async (req, res) => {
     }
 });
 
-// New API endpoint for fetching chat history
-app.get('/api/chat/history/:conversationId', async (req, res) => {
-    const { conversationId } = req.params;
-    try {
-        const { rows } = await db.query(
-            'SELECT sender_id, message_content, timestamp FROM messages WHERE conversation_id = $1 ORDER BY timestamp',
-            [conversationId]
-        );
-        res.json(rows);
-    } catch (err) {
-        console.error('Error fetching chat history:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
 
 
 
@@ -185,6 +171,7 @@ io.on('connection', (socket) => {
             if (patient) {
                 onlinePatients[patient.id] = { ...patient, socketId: socket.id };
                 console.log(`[SERVER] Patient ${patient.username} (${patient.id}) joined. Stored in onlinePatients:`, onlinePatients[patient.id]);
+                console.log('[SERVER] Current onlinePatients:', Object.keys(onlinePatients)); // Log all online patient IDs
             }
         } catch (err) {
             console.error('Error fetching patient details:', err);
@@ -282,7 +269,13 @@ io.on('connection', (socket) => {
     socket.on('doctor_accepts_consultation', (data) => {
         const { patientId, doctorId, doctorName, conversationId } = data;
         console.log(`[SERVER] Doctor ${doctorName} (${doctorId}) accepts consultation for patient ${patientId} (Conversation: ${conversationId})`);
-        const patientSocket = onlinePatients[Number(patientId)];
+        
+        const patientNumId = Number(patientId);
+        console.log(`[SERVER] Attempting to find patient socket for patientId: ${patientNumId}. Current onlinePatients keys:`, Object.keys(onlinePatients));
+        
+        const patientSocket = onlinePatients[patientNumId];
+        console.log(`[SERVER] patientSocket found:`, patientSocket);
+
         if (patientSocket && patientSocket.socketId) {
             io.to(patientSocket.socketId).emit('consultation_accepted', { doctorId, doctorName, conversationId });
             console.log(`[SERVER] Emitted consultation_accepted to patient ${patientId} (socket: ${patientSocket.socketId})`);
@@ -298,6 +291,7 @@ io.on('connection', (socket) => {
         );
         if (disconnectedDoctorId) {
             delete onlineDoctors[disconnectedDoctorId];
+            console.log(`[SERVER] Doctor ${disconnectedDoctorId} disconnected. Current onlineDoctors:`, Object.keys(onlineDoctors));
         }
 
         // Find and remove the patient from onlinePatients if they disconnect
@@ -306,6 +300,7 @@ io.on('connection', (socket) => {
         );
         if (disconnectedPatientId) {
             delete onlinePatients[disconnectedPatientId];
+            console.log(`[SERVER] Patient ${disconnectedPatientId} disconnected. Current onlinePatients:`, Object.keys(onlinePatients));
         }
     });
 });

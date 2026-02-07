@@ -71,24 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (room) {
         socket.emit('join', room);
-        fetchChatHistory(conversationId); // Fetch history when joining the room
-    }
-
-    async function fetchChatHistory(convId) {
-        try {
-            const response = await fetch(`/api/chat/history/${convId}`);
-            if (response.ok) {
-                const messages = await response.json();
-                messages.forEach(msg => {
-                    const messageType = msg.sender_id == currentUserId ? 'sent' : 'received';
-                    appendMessage(msg.message_content, messageType, msg.timestamp);
-                });
-            } else {
-                console.error('Failed to fetch chat history:', response.statusText);
-            }
-        } catch (error) {
-            console.error('Error fetching chat history:', error);
-        }
     }
 
     chatForm.addEventListener('submit', (e) => {
@@ -102,20 +84,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     socket.on('chat_message', (data) => {
         const messageType = data.senderId == currentUserId ? 'sent' : 'received';
-        appendMessage(data.message, messageType, data.timestamp);
+        appendMessage(data.message, messageType);
     });
 
-    function appendMessage(message, type, timestamp = new Date()) {
+    function appendMessage(message, type) {
         const messageElement = document.createElement('div');
         messageElement.className = `chat-message ${type}`;
-        
-        const timestampOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
-        const formattedTime = new Date(timestamp).toLocaleTimeString([], timestampOptions);
-
-        messageElement.innerHTML = `
-            <span class="message-content">${message}</span>
-            <span class="timestamp">${formattedTime}</span>
-        `;
+        messageElement.textContent = message;
         chatBox.appendChild(messageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
