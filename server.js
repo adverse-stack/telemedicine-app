@@ -141,6 +141,21 @@ app.get('/api/doctor/patients', async (req, res) => {
     }
 });
 
+// New API endpoint for fetching chat history
+app.get('/api/chat/history/:conversationId', async (req, res) => {
+    const { conversationId } = req.params;
+    try {
+        const { rows } = await db.query(
+            'SELECT sender_id, message_content, timestamp FROM messages WHERE conversation_id = $1 ORDER BY timestamp',
+            [conversationId]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('Error fetching chat history:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 
 
 // Socket.IO Connection Handling
@@ -233,10 +248,15 @@ io.on('connection', (socket) => {
         const numericSenderId = Number(senderId); // Ensure senderId is a number
 
         try {
-            io.to(numericRoom).emit('chat_message', { senderId: numericSenderId, message });
+            // Save message to database
+            await db.query(
+                'INSERT INTO messages (conversation_id, sender_id, message_content) VALUES ($1, $2, $3)',
+                [numericRoom, numericSenderId, message]
+            );
+            io.to(numericRoom).emit('chat_message', { senderId: numericSenderId, message, conversationId: numericRoom, timestamp: new Date() });
             console.log(`[SERVER] Chat message from ${senderId} to room ${room}: ${message}`);
         } catch (err) {
-            console.error('Error broadcasting chat message:', err);
+            console.error('Error broadcasting or saving chat message:', err);
         }
     });
     

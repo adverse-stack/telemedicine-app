@@ -20,21 +20,33 @@ const createTable = async () => {
     );
   `;
 
-  const conversationsTableQuery = `
-    CREATE TABLE IF NOT EXISTS conversations (
-      id SERIAL PRIMARY KEY,
-      patient_id INTEGER REFERENCES users(id),
-      doctor_id INTEGER REFERENCES users(id),
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-
+      const conversationsTableQuery = `
+        CREATE TABLE IF NOT EXISTS conversations (
+          id SERIAL PRIMARY KEY,
+          patient_id INTEGER REFERENCES users(id),
+          doctor_id INTEGER REFERENCES users(id),
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+  
+      const messagesTableQuery = `
+        CREATE TABLE IF NOT EXISTS messages (
+          id SERIAL PRIMARY KEY,
+          conversation_id INTEGER REFERENCES conversations(id),
+          sender_id INTEGER REFERENCES users(id),
+          message_content TEXT NOT NULL,
+          timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
   try {
     await pool.query(usersTableQuery);
     console.log('Users table is ready.');
 
     await pool.query(conversationsTableQuery);
     console.log('Conversations table is ready.');
+
+    await pool.query(messagesTableQuery);
+    console.log('Messages table is ready.');
 
     // Upsert admin user
     const saltRounds = 10;
