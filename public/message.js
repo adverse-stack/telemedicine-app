@@ -12,20 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const socket = io();
 
-    console.log('[message.js] Initial Socket.IO state - connected:', socket.connected, 'id:', socket.id);
-
-    socket.on('connect', () => {
-        console.log('[message.js] Socket.IO Connected! ID:', socket.id);
-        if (room) {
-            socket.emit('join', room);
-            console.log('[message.js] Re-joined room on connect:', room);
-        }
-    });
-
-    socket.on('disconnect', (reason) => {
-        console.log('[message.js] Socket.IO Disconnected! Reason:', reason);
-    });
-
     const chatWithName = document.getElementById('chat-with-name');
     const chatBox = document.getElementById('chat-box');
     const chatForm = document.getElementById('chat-form');
