@@ -267,6 +267,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('doctor_accepts_consultation', (data) => {
+        console.log('[SERVER] Raw data received by doctor_accepts_consultation:', data); // Add this line
         const { patientId, doctorId, doctorName, conversationId } = data;
         console.log(`[SERVER] Doctor ${doctorName} (${doctorId}) accepts consultation for patient ${patientId} (Conversation: ${conversationId})`);
         
