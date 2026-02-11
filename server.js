@@ -218,16 +218,23 @@ app.delete('/api/admin/doctors/:id', authenticateToken, authorizeRoles(['admin']
     }
 });
 
-app.get('/api/doctors', authenticateToken, (req, res) => {
+app.get('/api/doctors', authenticateToken, async (req, res) => { // Added async keyword
     const { profession } = req.query;
-    let availableDoctors = Object.values(onlineDoctors);
+    try {
+        let query = `SELECT u.id, u.username, u.profession FROM users u JOIN online_users ou ON u.id = ou.user_id WHERE u.role = 'doctor'`;
+        const queryParams = [];
 
-    if (profession) {
-        // Case-insensitive filtering
-        availableDoctors = availableDoctors.filter(doc => doc.profession.toLowerCase() === profession.toLowerCase());
+        if (profession) {
+            query += ` AND LOWER(u.profession) = LOWER($1)`;
+            queryParams.push(profession);
+        }
+
+        const { rows } = await db.query(query, queryParams);
+        res.json(rows);
+    } catch (err) {
+        console.error('Error fetching online doctors:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-    
-    res.json(availableDoctors);
 });
 
 app.get('/api/doctor/patients', authenticateToken, authorizeRoles(['doctor']), async (req, res) => {
@@ -238,23 +245,15 @@ app.get('/api/doctor/patients', authenticateToken, authorizeRoles(['doctor']), a
     }
     try {
         const { rows } = await db.query(
-            `SELECT u.id, u.username
+            `SELECT u.id, u.username, TRUE AS isOnline  -- Select isOnline as TRUE since we're joining with online_users
              FROM users u
              JOIN conversations c ON u.id = c.patient_id
+             JOIN online_users ou ON u.id = ou.user_id AND ou.role = 'patient' -- Join with online_users to filter for online patients
              WHERE c.doctor_id = $1 AND u.role = 'patient'`,
             [doctorId]
         );
-        // Filter to include only online patients and get their current status
-        const patientsWithOnlineStatus = rows.map(patient => {
-            const onlinePatient = onlinePatients[patient.id];
-            return {
-                id: patient.id,
-                username: patient.username,
-                isOnline: !!onlinePatient // True if onlinePatient exists
-            };
-        }).filter(patient => patient.isOnline); // Only keep online patients
-
-        res.json(patientsWithOnlineStatus);
+        // The previous mapping and filtering for online status is no longer needed as the query handles it
+        res.json(rows);
     } catch (err) {
         console.error('Error fetching doctor patients:', err);
         res.status(500).json({ success: false, message: 'Server error' });
@@ -442,23 +441,13 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('disconnect', () => {
-        // Find and remove the doctor from onlineDoctors if they disconnect
-        const disconnectedDoctorId = Object.keys(onlineDoctors).find(
-            id => onlineDoctors[id].socketId === socket.id
-        );
-        if (disconnectedDoctorId) {
-            delete onlineDoctors[disconnectedDoctorId];
-            console.log(`[SERVER] Doctor ${disconnectedDoctorId} disconnected. Current onlineDoctors:`, Object.keys(onlineDoctors));
-        }
-
-        // Find and remove the patient from onlinePatients if they disconnect
-        const disconnectedPatientId = Object.keys(onlinePatients).find(
-            id => onlinePatients[id]?.socketId === socket.id
-        );
-        if (disconnectedPatientId) {
-            delete onlinePatients[disconnectedPatientId];
-            console.log(`[SERVER] Patient ${disconnectedPatientId} disconnected. Current onlinePatients:`, Object.keys(onlinePatients));
+    socket.on('disconnect', async () => {
+        console.log(`[SERVER] User ${socket.userId} (${socket.userRole}) disconnected.`);
+        try {
+            await db.query('DELETE FROM online_users WHERE user_id = $1', [socket.userId]);
+            console.log(`[SERVER] User ${socket.userId} removed from online_users table.`);
+        } catch (err) {
+            console.error('Error removing online status on disconnect:', err);
         }
     });
 });
