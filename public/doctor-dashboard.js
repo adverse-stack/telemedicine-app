@@ -1,25 +1,46 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const userId = localStorage.getItem('userId');
-    const username = localStorage.getItem('username');
-    const userRole = localStorage.getItem('userRole');
+document.addEventListener('DOMContentLoaded', async () => {
+    // No localStorage checks here. Authentication is handled by HttpOnly cookies and server-side.
+    // If API calls fail due to authentication, they will redirect to login.
 
-    console.log('[doctor-dashboard.js] localStorage on load - userId:', userId, 'username:', username, 'userRole:', userRole);
-
-    if (!userId || !username || userRole !== 'doctor') {
-        console.warn('Doctor session data missing or user role mismatch. Redirecting to login.');
-        localStorage.clear();
-        window.location.href = 'login.html';
-        return; // Stop execution if not authenticated
-    }
-
-    const socket = io();
     const patientList = document.getElementById('patient-list');
     const logoutBtn = document.getElementById('logout-btn');
 
-    const doctorId = userId; // Use the verified userId
+    let currentDoctorId;
+    let currentDoctorUsername;
+    let currentDoctorRole; // Not strictly needed here, but good to have consistency
 
-    if (doctorId) {
-        socket.emit('doctor_joins', { userId: doctorId });
+    // Fetch and display doctor details (example of fetching user-specific data after authentication)
+    try {
+        const response = await fetch('/api/user/details'); // New endpoint to get authenticated user details
+        if (response.status === 401 || response.status === 403) {
+            window.location.href = 'login.html';
+            return;
+        }
+        if (!response.ok) {
+            throw new Error('Failed to fetch user details');
+        }
+        const user = await response.json();
+        currentDoctorId = user.userId;
+        currentDoctorUsername = user.username;
+        currentDoctorRole = user.role;
+
+        // Ensure the authenticated user is a doctor
+        if (currentDoctorRole !== 'doctor') {
+            console.warn('Authenticated user is not a doctor. Redirecting.');
+            window.location.href = 'login.html';
+            return;
+        }
+
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const socket = io();
+    
+    if (currentDoctorId) {
+        socket.emit('doctor_joins'); // userId is now from authenticated socket
     }
 
     // Helper function to add/update a patient in the list
@@ -48,8 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const patientId = e.target.getAttribute('data-patient-id');
             const patientName = e.target.getAttribute('data-patient-name');
             const conversationId = e.target.getAttribute('data-conversation-id');
-            const doctorId = localStorage.getItem('userId');
-            const doctorName = localStorage.getItem('username'); // Get doctor's username for emit
+            // Doctor ID and Name are now obtained from authenticated details, not localStorage
+            const doctorId = currentDoctorId;
+            const doctorName = currentDoctorUsername;
 
             socket.emit('doctor_accepts_consultation', { patientId: Number(patientId), doctorId: Number(doctorId), doctorName: doctorName, conversationId: Number(conversationId) });
 
@@ -60,7 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch patients who have conversations with the doctor
     const fetchPatients = async () => {
         try {
-            const response = await fetch(`/api/doctor/patients?doctorId=${doctorId}`);
+            const response = await fetch(`/api/doctor/patients?doctorId=${currentDoctorId}`); // Use authenticated doctor ID
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = 'login.html';
+                return;
+            }
+            if (!response.ok) {
+                throw new Error('Failed to fetch patients');
+            }
             const patients = await response.json();
 
             patientList.innerHTML = ''; // Clear previous list
@@ -75,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    if (doctorId) {
+    if (currentDoctorId) {
         fetchPatients();
     }
 
@@ -84,8 +113,19 @@ document.addEventListener('DOMContentLoaded', () => {
         addPatientToList({ id: patient.patientId, username: patient.patientName, conversationId: patient.conversationId, isOnline: true });
     });
 
-    logoutBtn.addEventListener('click', () => {
-        localStorage.clear();
-        window.location.href = 'login.html';
-    });
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/logout', { method: 'POST' });
+                if (response.ok) {
+                    window.location.href = 'login.html';
+                } else {
+                    alert('Logout failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+                alert('An error occurred during logout.');
+            }
+        });
+    }
 });

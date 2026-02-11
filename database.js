@@ -38,6 +38,15 @@ const createTable = async () => {
           timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
       `;
+
+  const onlineUsersTableQuery = `
+    CREATE TABLE IF NOT EXISTS online_users (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      socket_id TEXT NOT NULL,
+      role TEXT NOT NULL,
+      last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
   try {
     await pool.query(usersTableQuery);
     console.log('Users table is ready.');
@@ -47,6 +56,9 @@ const createTable = async () => {
 
     await pool.query(messagesTableQuery);
     console.log('Messages table is ready.');
+
+    await pool.query(onlineUsersTableQuery);
+    console.log('Online users table is ready.');
 
     // Upsert admin user
     const saltRounds = 10;

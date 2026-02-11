@@ -24,16 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.success) {
-                // Store user info (e.g., in localStorage or sessionStorage)
-                localStorage.setItem('userId', data.userId);
-                localStorage.setItem('userRole', data.role);
-                localStorage.setItem('username', username); // Store username for display
-
-                // Redirect based on role
-                if (data.role === 'patient') {
-                    window.location.href = 'patient-dashboard.html'; // Assuming patient-dashboard.html is the patient dashboard
-                } else if (data.role === 'doctor') {
-                    window.location.href = 'doctor-dashboard.html'; // Assuming doctor-dashboard.html is the doctor dashboard
+                // Redirect based on the role attempted for login
+                if (role === 'patient') { 
+                    window.location.href = 'patient-dashboard.html';
+                } else if (role === 'doctor') {
+                    window.location.href = 'doctor-dashboard.html';
                 }
             } else {
                 errorElement.textContent = data.message || 'Login failed. Please check your credentials.';

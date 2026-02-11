@@ -1,87 +1,133 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const userId = localStorage.getItem('userId');
-    const username = localStorage.getItem('username');
-    const userRole = localStorage.getItem('userRole');
+document.addEventListener('DOMContentLoaded', async () => {
+    // No localStorage checks here. Authentication is handled by HttpOnly cookies and server-side.
+    // If API calls fail due to authentication, they will redirect to login.
 
-    console.log('[patient-dashboard.js] localStorage on load - userId:', userId, 'username:', username, 'userRole:', userRole);
-
-    if (!userId || !username || userRole !== 'patient') {
-        console.warn('Patient session data missing or user role mismatch. Redirecting to login.');
-        localStorage.clear();
-        window.location.href = 'login.html';
-        return; // Stop execution if not authenticated
-    }
-
-    const socket = io();
-    const findDoctorsBtn = document.getElementById('find-doctors-btn');
+    const doctorsListDiv = document.getElementById('doctors-list');
+    const professionalFilter = document.getElementById('professional-filter');
+    const usernameDisplay = document.getElementById('username-display');
     const logoutBtn = document.getElementById('logout-btn');
 
-    const patientId = userId; // Use the verified userId
-    if (patientId) {
-        socket.emit('patient_joins', { patientId: patientId });
+    // Fetch and display username (example of fetching user-specific data after authentication)
+    // In a real app, this might come from a /api/me endpoint or similar
+    try {
+        const response = await fetch('/api/user/details'); // New endpoint to get authenticated user details
+        if (response.status === 401 || response.status === 403) {
+            window.location.href = 'login.html';
+            return;
+        }
+        if (!response.ok) {
+            throw new Error('Failed to fetch user details');
+        }
+        const user = await response.json();
+        if (usernameDisplay) {
+            usernameDisplay.textContent = user.username;
+        }
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        // Fallback or redirect if user details can't be fetched
+        window.location.href = 'login.html';
+        return;
     }
 
+    const fetchDoctors = async (profession = '') => {
+        try {
+            const response = await fetch(`/api/doctors?profession=${profession}`);
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = 'login.html';
+                return;
+            }
+            if (!response.ok) {
+                throw new Error('Failed to fetch doctors');
+            }
+            const doctors = await response.json();
+            doctorsListDiv.innerHTML = '';
+            if (doctors.length === 0) {
+                doctorsListDiv.innerHTML = '<p>No doctors available at the moment.</p>';
+                return;
+            }
+            doctors.forEach(doctor => {
+                const doctorCard = document.createElement('div');
+                doctorCard.className = 'card doctor-card';
+                doctorCard.innerHTML = `
+                    <h3>Dr. ${doctor.username}</h3>
+                    <p>Specialty: ${doctor.profession}</p>
+                    <button class="button-1 consult-btn" data-doctor-id="${doctor.id}" data-doctor-name="Dr. ${doctor.username}">Consult</button>
+                `;
+                doctorsListDiv.appendChild(doctorCard);
+            });
 
-    // Handle Patient: Find Doctors
-    if (findDoctorsBtn) {
-        findDoctorsBtn.addEventListener('click', async () => {
-            const profession = document.getElementById('profession').value;
-            const doctorListContainer = document.getElementById('doctor-list-container');
-            const doctorList = document.getElementById('doctor-list');
+            // Add event listeners for consult buttons
+            document.querySelectorAll('.consult-btn').forEach(button => {
+                button.addEventListener('click', startConsultation);
+            });
 
+        } catch (error) {
+            console.error('Error fetching doctors:', error);
+            doctorsListDiv.innerHTML = '<p class="error-message">Failed to load doctors.</p>';
+        }
+    };
+    
+    // New function to start consultation
+    const startConsultation = async (event) => {
+        const doctorId = event.target.dataset.doctorId;
+        const doctorName = event.target.dataset.doctorName;
+
+        try {
+            const response = await fetch('/api/start-conversation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ doctorId })
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Redirect to message page with conversation ID
+                window.location.href = `message.html?conversationId=${data.conversationId}&doctorId=${doctorId}&doctorName=${doctorName}`;
+            } else {
+                alert(`Failed to start conversation: ${data.message}`);
+            }
+
+        } catch (error) {
+            console.error('Error starting conversation:', error);
+            alert('An error occurred while starting the conversation.');
+        }
+    };
+
+    if (professionalFilter) {
+        professionalFilter.addEventListener('change', (e) => {
+            fetchDoctors(e.target.value);
+        });
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
             try {
-                const response = await fetch(`/api/doctors?profession=${profession}`);
-                const doctors = await response.json();
-
-                doctorList.innerHTML = ''; // Clear previous list
-                if (doctors.length > 0) {
-                    doctors.forEach(doctor => {
-                        const li = document.createElement('li');
-                        li.className = 'custom-list-item'; // Changed class
-                        li.innerHTML = `
-                            <span>${doctor.username} - ${doctor.profession}</span>
-                            <button class="button-1" data-doctor-id="${doctor.id}" data-doctor-name="${doctor.username}">Consult</button>
-                        `;
-                        doctorList.appendChild(li);
-                    });
-                     // Add event listeners to the new "Consult" buttons
-                    doctorList.querySelectorAll('.button-1').forEach(button => {
-                        button.addEventListener('click', async (e) => {
-                            const doctorId = Number(e.target.getAttribute('data-doctor-id'));
-                            const doctorName = e.target.getAttribute('data-doctor-name');
-                            // Use the verified userId and username from the session check
-                            const currentPatientId = userId; 
-                            const currentPatientUsername = username;
-
-                            socket.emit('patient_requests_consultation', {
-                                patientId: currentPatientId,
-                                patientName: currentPatientUsername,
-                                doctorId: doctorId,
-                                doctorName: doctorName
-                            });
-                            
-                            localStorage.setItem('selectedDoctorId', doctorId);
-                            // Redirect to the waiting room page
-                            window.location.href = `/waiting-room.html?doctorId=${doctorId}&doctorName=${doctorName}`;
-                        });
-                    });
-
-
+                const response = await fetch('/api/logout', { method: 'POST' });
+                if (response.ok) {
+                    window.location.href = 'login.html';
                 } else {
-                    doctorList.innerHTML = '<li class="list-group-item">No doctors found for this specialty.</li>';
+                    alert('Logout failed. Please try again.');
                 }
-                doctorListContainer.classList.remove('d-none');
             } catch (error) {
-                console.error('Failed to fetch doctors:', error);
+                console.error('Error during logout:', error);
+                alert('An error occurred during logout.');
             }
         });
     }
 
-    // Handle Logout
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        });
-    }
+    // Initial fetch of doctors
+    fetchDoctors();
+
+    // Socket.IO for real-time presence (patient joins)
+    const socket = io();
+    socket.emit('patient_joins', { patientId: 'no longer needed, server authenticates socket' }); // Argument not used on server now
+
 });

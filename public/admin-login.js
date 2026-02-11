@@ -22,9 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.success) {
-                localStorage.setItem('userId', data.userId);
-                localStorage.setItem('userRole', data.role);
-                localStorage.setItem('username', username); // Store username for display
                 window.location.href = 'admin.html'; // Assuming admin.html is the admin dashboard
             } else {
                 adminLoginError.textContent = data.message || 'Admin login failed. Please check your credentials.';

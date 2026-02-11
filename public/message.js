@@ -1,14 +1,6 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const userId = localStorage.getItem('userId');
-    const username = localStorage.getItem('username');
-    const userRole = localStorage.getItem('userRole');
-
-    if (!userId || !username || !userRole) {
-        console.warn('Session data missing or invalid for message page. Redirecting to login.');
-        localStorage.clear();
-        window.location.href = 'login.html';
-        return; // Stop execution if not authenticated
-    }
+document.addEventListener('DOMContentLoaded', async () => {
+    // No localStorage checks here. Authentication is handled by HttpOnly cookies and server-side.
+    // If API calls fail due to authentication, they will redirect to login.
 
     const socket = io();
 
@@ -26,6 +18,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const patientNameParam = params.get('patientName');
     const conversationId = params.get('conversationId'); // Get conversation ID from URL
 
+    let currentUserId;
+    let currentUserRole;
+    let currentUsername;
+
+    // Fetch authenticated user details
+    try {
+        const response = await fetch('/api/user/details');
+        if (response.status === 401 || response.status === 403) {
+            window.location.href = 'login.html';
+            return;
+        }
+        if (!response.ok) {
+            throw new Error('Failed to fetch user details');
+        }
+        const user = await response.json();
+        currentUserId = user.userId;
+        currentUserRole = user.role;
+        currentUsername = user.username;
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        window.location.href = 'login.html';
+        return;
+    }
+
     console.log('Message.js URL Params:', {
         doctorIdParam,
         doctorNameParam,
@@ -33,13 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
         patientNameParam,
         conversationId
     });
-
-    const currentUserId = userId; // Use verified userId
-    const currentUserRole = userRole; // Use verified userRole
-    const currentUsername = username; // Use verified username
-
+    
     let room;
-    let participantId; // The ID of the person we are chatting with
+    // participantId is the ID of the person we are chatting with
+    let participantId; 
 
     // Determine the room based on the conversationId
     if (conversationId) {
@@ -54,8 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } else {
         // Fallback or error handling if conversationId is missing
-        console.error('Conversation ID missing from URL.');
-        // Potentially redirect to a dashboard or error page
+        console.error('Conversation ID missing from URL. Redirecting to dashboard.');
         if (currentUserRole === 'patient') {
             window.location.href = '/patient-dashboard.html';
         } else if (currentUserRole === 'doctor') {
@@ -64,11 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return; // Stop further execution
     }
     
-    // The patient_joins event is now handled by patient-dashboard.js
-    // if (currentUserRole === 'patient') {
-    //     socket.emit('patient_joins', { patientId: currentUserId });
-    // }
-
     if (room) {
         socket.emit('join', room);
     }
@@ -76,8 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
     chatForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const message = chatInput.value;
-        if (message.trim() && conversationId) { // Use conversationId
-            socket.emit('chat_message', { room: conversationId, message, senderId: currentUserId });
+        if (message.trim() && conversationId) {
+            // senderId is included for clarity, but server will use authenticated socket.userId
+            socket.emit('chat_message', { room: conversationId, message, senderId: currentUserId }); 
             chatInput.value = '';
         }
     });
