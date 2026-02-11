@@ -29,20 +29,22 @@ app.use(cookieParser()); // Use cookie-parser middleware
 // Authentication Middleware
 const authenticateToken = (req, res, next) => {
     const token = req.cookies.token; // Get token from HttpOnly cookie
+    console.log('[authenticateToken] Received token:', token ? 'YES' : 'NO');
 
     if (!token) {
+        console.log('[authenticateToken] No token found, returning 401.');
         return res.status(401).json({ success: false, message: 'Authentication token required' });
     }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
-            // Token is invalid or expired
-            // Clear the invalid token cookie for security and to prevent loops
-            res.clearCookie('token');
+            console.log('[authenticateToken] Token verification failed:', err.message);
+            res.clearCookie('token'); // Clear the invalid token cookie
             return res.status(403).json({ success: false, message: 'Invalid or expired token' });
         }
         req.userId = user.id;
         req.userRole = user.role;
+        console.log(`[authenticateToken] Token verified. User ID: ${req.userId}, Role: ${req.userRole}`);
         next(); // Proceed to the next middleware/route handler
     });
 };
