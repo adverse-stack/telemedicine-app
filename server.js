@@ -453,19 +453,19 @@ io.on('connection', async (socket) => {
     // WebRTC Signaling
     socket.on('webrtc_offer', (data) => {
         const { room } = data;
-        io.to(String(room)).emit('webrtc_offer', data);
+        socket.to(String(room)).emit('webrtc_offer', data);
         console.log(`[SERVER] WebRTC offer for room ${room}`);
     });
 
     socket.on('webrtc_answer', (data) => {
         const { room, answer } = data;
-        io.to(String(room)).emit('webrtc_answer', answer);
+        socket.to(String(room)).emit('webrtc_answer', answer);
         console.log(`[SERVER] WebRTC answer for room ${room}`);
     });
 
     socket.on('webrtc_ice_candidate', (data) => {
         const { room, candidate } = data;
-        io.to(String(room)).emit('webrtc_ice_candidate', candidate);
+        socket.to(String(room)).emit('webrtc_ice_candidate', candidate);
         console.log(`[SERVER] WebRTC ICE candidate for room ${room}`);
     });
 

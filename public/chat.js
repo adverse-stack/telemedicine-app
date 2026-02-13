@@ -72,24 +72,35 @@ const processIceCandidateBuffer = async () => {
 
 // Socket listeners for WebRTC signaling
 socket.on('webrtc_offer', async ({ room, offer }) => {
-    if (!peerConnection) {
-        // If the receiver hasn't initialized their video yet, do it now as a non-caller
-        await initVideo(room, false);
-    }
-    
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    socket.emit('webrtc_answer', { room, answer });
+    try {
+        if (!peerConnection) {
+            // If the receiver hasn't initialized their video yet, do it now as a non-caller
+            await initVideo(room, false);
+        }
 
-    // Process any candidates that arrived early
-    await processIceCandidateBuffer();
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        socket.emit('webrtc_answer', { room, answer });
+
+        // Process any candidates that arrived early
+        await processIceCandidateBuffer();
+    } catch (error) {
+        console.error('Error handling webrtc_offer:', error);
+    }
 });
 
 socket.on('webrtc_answer', async (answer) => {
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-    // Process any candidates that arrived early
-    await processIceCandidateBuffer();
+    try {
+        if (!peerConnection || peerConnection.signalingState !== 'have-local-offer') {
+            return;
+        }
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+        // Process any candidates that arrived early
+        await processIceCandidateBuffer();
+    } catch (error) {
+        console.error('Error handling webrtc_answer:', error);
+    }
 });
 
 socket.on('webrtc_ice_candidate', async (candidate) => {
