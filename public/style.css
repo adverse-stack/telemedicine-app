@@ -580,17 +580,28 @@ footer p {
 }
 
 .chat-message.sent {
-    background-color: var(--teal);
+    background-color: #1f7f73;
     color: #fff;
     align-self: flex-end; /* Align to the right */
     margin-left: auto;
 }
 
 .chat-message.received {
-    background-color: var(--mint);
-    color: var(--ink);
+    background-color: #e9f7f3;
+    color: #0b2f38;
     align-self: flex-start; /* Align to the left */
     margin-right: auto;
+}
+
+.chat-message-meta {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    opacity: 0.85;
+}
+
+.chat-message-text {
+    font-size: 15px;
 }
 
 .chat-input-form {

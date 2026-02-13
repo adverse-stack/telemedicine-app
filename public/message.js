@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentUserId;
     let currentUserRole;
     let currentUsername;
+    let participantLabel = 'Participant';
 
     // Fetch authenticated user details
     try {
@@ -60,10 +61,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Set participantId and chatWithName based on role
         if (currentUserRole === 'patient') {
             participantId = doctorIdParam;
-            chatWithName.textContent = `Chat with ${doctorNameParam}`;
+            participantLabel = doctorNameParam || 'Doctor';
+            chatWithName.textContent = `Chat with ${participantLabel}`;
         } else if (currentUserRole === 'doctor') {
             participantId = patientIdParam;
-            chatWithName.textContent = `Chat with ${patientNameParam}`;
+            participantLabel = patientNameParam || `Patient ${patientIdParam || ''}`.trim();
+            chatWithName.textContent = `Chat with ${participantLabel}`;
         }
     } else {
         // Fallback or error handling if conversationId is missing
@@ -96,14 +99,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     socket.on('chat_message', (data) => {
-        const messageType = data.senderId == currentUserId ? 'sent' : 'received';
-        appendMessage(data.message, messageType);
+        const messageType = Number(data.senderId) === Number(currentUserId) ? 'sent' : 'received';
+        const senderLabel = messageType === 'sent' ? 'You' : participantLabel;
+        appendMessage(data.message, messageType, senderLabel);
     });
 
-    function appendMessage(message, type) {
+    function appendMessage(message, type, senderLabel) {
         const messageElement = document.createElement('div');
         messageElement.className = `chat-message ${type}`;
-        messageElement.textContent = message;
+        messageElement.innerHTML = `
+            <div class="chat-message-meta">${senderLabel}</div>
+            <div class="chat-message-text">${message}</div>
+        `;
         chatBox.appendChild(messageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
