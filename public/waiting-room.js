@@ -1,23 +1,32 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const userId = localStorage.getItem('userId');
-    const username = localStorage.getItem('username');
-    const userRole = localStorage.getItem('userRole');
-
-    console.log('[waiting-room.js] localStorage on load - userId:', userId, 'username:', username, 'userRole:', userRole);
-
-    if (!userId || !username || userRole !== 'patient') {
-        console.warn('Patient session data missing or user role mismatch for waiting room. Redirecting to login.');
-        localStorage.clear();
-        window.location.href = 'login.html';
-        return; // Stop execution if not authenticated
-    }
-
+document.addEventListener('DOMContentLoaded', async () => {
     const socket = io();
     const params = new URLSearchParams(window.location.search);
     const doctorId = params.get('doctorId');
     const doctorName = params.get('doctorName');
-    const patientId = userId; // Use verified userId
-    const patientUsername = username; // Use verified username
+    let patientId;
+    let patientUsername;
+
+    try {
+        const response = await fetch('/api/user/details');
+        if (response.status === 401 || response.status === 403) {
+            window.location.href = 'login.html';
+            return;
+        }
+        if (!response.ok) {
+            throw new Error('Failed to fetch user details');
+        }
+        const user = await response.json();
+        if (user.role !== 'patient') {
+            window.location.href = 'login.html';
+            return;
+        }
+        patientId = user.userId;
+        patientUsername = user.username;
+    } catch (error) {
+        console.error('Failed to load user details for waiting room:', error);
+        window.location.href = 'login.html';
+        return;
+    }
 
     if (!doctorId || !patientId) {
         console.error('Missing doctorId or patientId in waiting room. Redirecting to patient dashboard.');

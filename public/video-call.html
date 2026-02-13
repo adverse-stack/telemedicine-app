@@ -42,13 +42,24 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="chat.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const params = new URLSearchParams(window.location.search);
             const room = params.get('room');
             const isCaller = params.get('caller') === 'true';
 
             if (room) {
                 initVideo(room, isCaller);
+            }
+
+            let userRole = null;
+            try {
+                const response = await fetch('/api/user/details');
+                if (response.ok) {
+                    const user = await response.json();
+                    userRole = user.role;
+                }
+            } catch (error) {
+                console.error('Failed to load user details:', error);
             }
 
             const endCallBtn = document.getElementById('end-call-btn');
@@ -61,14 +72,13 @@
                     if (peerConnection) {
                         peerConnection.close();
                     }
-                    // Redirect back to message page or dashboard
-                    const userRole = localStorage.getItem('userRole');
+                    // Redirect back to dashboard
                     if (userRole === 'patient') {
-                        const doctorId = localStorage.getItem('selectedDoctorId');
-                        window.location.href = `/message.html?doctorId=${doctorId}`;
+                        window.location.href = '/patient-dashboard.html';
                     } else if (userRole === 'doctor') {
-                        // Assuming doctor can go back to dashboard
                         window.location.href = '/doctor-dashboard.html';
+                    } else {
+                        window.location.href = '/login.html';
                     }
                 });
             }

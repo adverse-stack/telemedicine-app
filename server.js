@@ -14,8 +14,8 @@ const io = socketIo(server);
 const PORT = process.env.PORT || 3000;
 const saltRounds = 10;
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey'; // Default for local dev, ensure set in Render
-// const onlineDoctors = {}; // In-memory store for online doctors - REMOVED
-// const onlinePatients = {}; // In-memory store for online patients - REMOVED
+const onlineDoctors = {};
+const onlinePatients = {};
 
 // Middleware
 app.use((req, res, next) => {
@@ -68,6 +68,30 @@ app.use('/api', (req, res, next) => {
 app.post('/api/logout', authenticateToken, (req, res) => {
     res.clearCookie('token');
     res.json({ success: true, message: 'Logged out successfully' });
+});
+
+app.get('/api/user/details', authenticateToken, async (req, res) => {
+    try {
+        const { rows } = await db.query(
+            'SELECT id, username, role FROM users WHERE id = $1',
+            [req.userId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const user = rows[0];
+        res.json({
+            success: true,
+            userId: user.id,
+            username: user.username,
+            role: user.role
+        });
+    } catch (err) {
+        console.error('Error fetching authenticated user details:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 });
 
 // API Routes
@@ -297,6 +321,13 @@ io.on('connection', (socket) => {
             const doctor = rows[0];
             if (doctor) {
                 onlineDoctors[doctor.id] = { ...doctor, socketId: socket.id };
+                await db.query(
+                    `INSERT INTO online_users (user_id, socket_id, role, last_seen)
+                     VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+                     ON CONFLICT (user_id)
+                     DO UPDATE SET socket_id = EXCLUDED.socket_id, role = EXCLUDED.role, last_seen = CURRENT_TIMESTAMP`,
+                    [doctor.id, socket.id, 'doctor']
+                );
             }
         } catch (err) {
             console.error('Error fetching doctor details:', err);
@@ -315,6 +346,13 @@ io.on('connection', (socket) => {
             const patient = rows[0];
             if (patient) {
                 onlinePatients[patient.id] = { ...patient, socketId: socket.id };
+                await db.query(
+                    `INSERT INTO online_users (user_id, socket_id, role, last_seen)
+                     VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+                     ON CONFLICT (user_id)
+                     DO UPDATE SET socket_id = EXCLUDED.socket_id, role = EXCLUDED.role, last_seen = CURRENT_TIMESTAMP`,
+                    [patient.id, socket.id, 'patient']
+                );
                 console.log(`[SERVER] Patient ${patient.username} (${patient.id}) joined. Stored in onlinePatients:`, onlinePatients[patient.id]);
                 console.log('[SERVER] Current onlinePatients:', Object.keys(onlinePatients)); // Log all online patient IDs
             }
@@ -443,6 +481,8 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', async () => {
         console.log(`[SERVER] User ${socket.userId} (${socket.userRole}) disconnected.`);
+        delete onlineDoctors[socket.userId];
+        delete onlinePatients[socket.userId];
         try {
             await db.query('DELETE FROM online_users WHERE user_id = $1', [socket.userId]);
             console.log(`[SERVER] User ${socket.userId} removed from online_users table.`);
@@ -457,4 +497,3 @@ server.listen(PORT, '0.0.0.0', () => {
 });
 
 module.exports = app;
-

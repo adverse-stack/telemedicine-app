@@ -2,8 +2,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // No localStorage checks here. Authentication is handled by HttpOnly cookies and server-side.
     // If API calls fail due to authentication, they will redirect to login.
 
-    const doctorsListDiv = document.getElementById('doctors-list');
-    const professionalFilter = document.getElementById('professional-filter');
+    const doctorsList = document.getElementById('doctor-list');
+    const professionFilter = document.getElementById('profession');
+    const findDoctorsBtn = document.getElementById('find-doctors-btn');
     const usernameDisplay = document.getElementById('username-display');
     const logoutBtn = document.getElementById('logout-btn');
 
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const fetchDoctors = async (profession = '') => {
+        if (!doctorsList) return;
         try {
             const response = await fetch(`/api/doctors?profession=${profession}`);
             if (response.status === 401 || response.status === 403) {
@@ -40,20 +42,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 throw new Error('Failed to fetch doctors');
             }
             const doctors = await response.json();
-            doctorsListDiv.innerHTML = '';
+            doctorsList.innerHTML = '';
             if (doctors.length === 0) {
-                doctorsListDiv.innerHTML = '<p>No doctors available at the moment.</p>';
+                doctorsList.innerHTML = '<li class="custom-list-item placeholder">No doctors available at the moment.</li>';
                 return;
             }
             doctors.forEach(doctor => {
-                const doctorCard = document.createElement('div');
-                doctorCard.className = 'card doctor-card';
-                doctorCard.innerHTML = `
-                    <h3>Dr. ${doctor.username}</h3>
-                    <p>Specialty: ${doctor.profession}</p>
+                const item = document.createElement('li');
+                item.className = 'custom-list-item';
+                item.innerHTML = `
+                    <span>Dr. ${doctor.username} (${doctor.profession})</span>
                     <button class="button-1 consult-btn" data-doctor-id="${doctor.id}" data-doctor-name="Dr. ${doctor.username}">Consult</button>
                 `;
-                doctorsListDiv.appendChild(doctorCard);
+                doctorsList.appendChild(item);
             });
 
             // Add event listeners for consult buttons
@@ -63,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         } catch (error) {
             console.error('Error fetching doctors:', error);
-            doctorsListDiv.innerHTML = '<p class="error-message">Failed to load doctors.</p>';
+            doctorsList.innerHTML = '<li class="custom-list-item error-message">Failed to load doctors.</li>';
         }
     };
     
@@ -101,9 +102,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    if (professionalFilter) {
-        professionalFilter.addEventListener('change', (e) => {
-            fetchDoctors(e.target.value);
+    if (findDoctorsBtn && professionFilter) {
+        findDoctorsBtn.addEventListener('click', () => {
+            fetchDoctors(professionFilter.value);
         });
     }
 
@@ -124,7 +125,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Initial fetch of doctors
-    fetchDoctors();
+    if (professionFilter) {
+        fetchDoctors(professionFilter.value);
+    }
 
     // Socket.IO for real-time presence (patient joins)
     const socket = io();
