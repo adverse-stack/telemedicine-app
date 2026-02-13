@@ -17,6 +17,32 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey'; // Default for
 const onlineDoctors = {};
 const onlinePatients = {};
 
+const setUserOnline = async (userId, role, socketId) => {
+    const { rows } = await db.query(
+        'SELECT id, username, profession FROM users WHERE id = $1 AND role = $2',
+        [userId, role]
+    );
+
+    const user = rows[0];
+    if (!user) return null;
+
+    if (role === 'doctor') {
+        onlineDoctors[user.id] = { id: user.id, username: user.username, profession: user.profession, socketId };
+    } else if (role === 'patient') {
+        onlinePatients[user.id] = { id: user.id, username: user.username, socketId };
+    }
+
+    await db.query(
+        `INSERT INTO online_users (user_id, socket_id, role, last_seen)
+         VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+         ON CONFLICT (user_id)
+         DO UPDATE SET socket_id = EXCLUDED.socket_id, role = EXCLUDED.role, last_seen = CURRENT_TIMESTAMP`,
+        [user.id, socketId, role]
+    );
+
+    return user;
+};
+
 // Middleware
 app.use((req, res, next) => {
     next();
@@ -308,27 +334,20 @@ io.use((socket, next) => {
 });
 
 // Socket.IO Connection Handling
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
+    try {
+        await setUserOnline(socket.userId, socket.userRole, socket.id);
+    } catch (err) {
+        console.error('Error setting user online on connect:', err);
+    }
+
     socket.on('doctor_joins', async () => { // Removed data parameter as userId is now from authenticated socket
         if (socket.userRole !== 'doctor') {
             console.warn(`[SERVER] Unauthorized user (Role: ${socket.userRole}) attempted to join as doctor.`);
             return;
         }
-        const doctorNumId = socket.userId; 
         try {
-            // Fetch doctor details from DB
-            const { rows } = await db.query('SELECT id, username, profession FROM users WHERE id = $1 AND role = \'doctor\'', [doctorNumId]);
-            const doctor = rows[0];
-            if (doctor) {
-                onlineDoctors[doctor.id] = { ...doctor, socketId: socket.id };
-                await db.query(
-                    `INSERT INTO online_users (user_id, socket_id, role, last_seen)
-                     VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
-                     ON CONFLICT (user_id)
-                     DO UPDATE SET socket_id = EXCLUDED.socket_id, role = EXCLUDED.role, last_seen = CURRENT_TIMESTAMP`,
-                    [doctor.id, socket.id, 'doctor']
-                );
-            }
+            await setUserOnline(socket.userId, 'doctor', socket.id);
         } catch (err) {
             console.error('Error fetching doctor details:', err);
         }
@@ -339,20 +358,9 @@ io.on('connection', (socket) => {
             console.warn(`[SERVER] Unauthorized user (Role: ${socket.userRole}) attempted to join as patient.`);
             return;
         }
-        const patientNumId = socket.userId;
         try {
-            // Fetch patient details from DB
-            const { rows } = await db.query('SELECT id, username FROM users WHERE id = $1 AND role = \'patient\'', [patientNumId]);
-            const patient = rows[0];
+            const patient = await setUserOnline(socket.userId, 'patient', socket.id);
             if (patient) {
-                onlinePatients[patient.id] = { ...patient, socketId: socket.id };
-                await db.query(
-                    `INSERT INTO online_users (user_id, socket_id, role, last_seen)
-                     VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
-                     ON CONFLICT (user_id)
-                     DO UPDATE SET socket_id = EXCLUDED.socket_id, role = EXCLUDED.role, last_seen = CURRENT_TIMESTAMP`,
-                    [patient.id, socket.id, 'patient']
-                );
                 console.log(`[SERVER] Patient ${patient.username} (${patient.id}) joined. Stored in onlinePatients:`, onlinePatients[patient.id]);
                 console.log('[SERVER] Current onlinePatients:', Object.keys(onlinePatients)); // Log all online patient IDs
             }
@@ -413,15 +421,21 @@ io.on('connection', (socket) => {
     });
 
     socket.on('join', (room) => {
-        socket.join(room);
-        console.log(`[SERVER] Socket ${socket.id} joined room ${room}`);
+        const roomKey = String(room);
+        socket.join(roomKey);
+        console.log(`[SERVER] Socket ${socket.id} joined room ${roomKey}`);
     });
 
     socket.on('chat_message', async (data) => {
         const { room, message } = data; // room and message still from client
         const senderId = socket.userId; // Use authenticated sender ID
+        const roomKey = String(room);
         const numericRoom = Number(room); // Ensure room is a number
         const numericSenderId = Number(senderId); // Ensure senderId is a number
+
+        if (!message || Number.isNaN(numericRoom)) {
+            return;
+        }
 
         try {
             // Save message to database
@@ -429,7 +443,7 @@ io.on('connection', (socket) => {
                 'INSERT INTO messages (conversation_id, sender_id, message_content) VALUES ($1, $2, $3)',
                 [numericRoom, numericSenderId, message]
             );
-            io.to(numericRoom).emit('chat_message', { senderId: numericSenderId, message, conversationId: numericRoom, timestamp: new Date() });
+            io.to(roomKey).emit('chat_message', { senderId: numericSenderId, message, conversationId: numericRoom, timestamp: new Date() });
             console.log(`[SERVER] Chat message from ${senderId} to room ${room}: ${message}`);
         } catch (err) {
             console.error('Error broadcasting or saving chat message:', err);
@@ -439,23 +453,23 @@ io.on('connection', (socket) => {
     // WebRTC Signaling
     socket.on('webrtc_offer', (data) => {
         const { room } = data;
-        io.to(Number(room)).emit('webrtc_offer', data); // Ensure room is a number for Socket.IO room
+        io.to(String(room)).emit('webrtc_offer', data);
         console.log(`[SERVER] WebRTC offer for room ${room}`);
     });
 
     socket.on('webrtc_answer', (data) => {
         const { room, answer } = data;
-        io.to(Number(room)).emit('webrtc_answer', answer); // Ensure room is a number
+        io.to(String(room)).emit('webrtc_answer', answer);
         console.log(`[SERVER] WebRTC answer for room ${room}`);
     });
 
     socket.on('webrtc_ice_candidate', (data) => {
         const { room, candidate } = data;
-        io.to(Number(room)).emit('webrtc_ice_candidate', candidate); // Ensure room is a number
+        io.to(String(room)).emit('webrtc_ice_candidate', candidate);
         console.log(`[SERVER] WebRTC ICE candidate for room ${room}`);
     });
 
-    socket.on('doctor_accepts_consultation', (data) => {
+    socket.on('doctor_accepts_consultation', async (data) => {
         if (socket.userRole !== 'doctor') {
             console.warn(`[SERVER] Unauthorized user (Role: ${socket.userRole}) attempted to accept consultation.`);
             return;
@@ -468,7 +482,20 @@ io.on('connection', (socket) => {
         const patientNumId = Number(patientId);
         console.log(`[SERVER] Attempting to find patient socket for patientId: ${patientNumId}. Current onlinePatients keys:`, Object.keys(onlinePatients));
         
-        const patientSocket = onlinePatients[patientNumId];
+        let patientSocket = onlinePatients[patientNumId];
+        if (!patientSocket) {
+            try {
+                const { rows } = await db.query(
+                    'SELECT socket_id FROM online_users WHERE user_id = $1 AND role = $2',
+                    [patientNumId, 'patient']
+                );
+                if (rows[0]?.socket_id) {
+                    patientSocket = { socketId: rows[0].socket_id };
+                }
+            } catch (err) {
+                console.error('Error checking online_users for patient socket:', err);
+            }
+        }
         console.log(`[SERVER] patientSocket found:`, patientSocket);
 
         if (patientSocket && patientSocket.socketId) {

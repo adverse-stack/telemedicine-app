@@ -78,11 +78,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     if (room) {
         socket.emit('join', room);
+        if (currentUserRole === 'patient') {
+            socket.emit('patient_joins');
+        } else if (currentUserRole === 'doctor') {
+            socket.emit('doctor_joins');
+        }
     }
 
     chatForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const message = chatInput.value;
+        const message = chatInput.value.trim();
         if (message.trim() && conversationId) {
             // senderId is included for clarity, but server will use authenticated socket.userId
             socket.emit('chat_message', { room: conversationId, message, senderId: currentUserId }); 
