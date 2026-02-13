@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Contact WeCare for support, questions, or partnership inquiries.">
+  <title>WeCare | Contact</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/0ec64a7002.js" crossorigin="anonymous" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container" id="navbar">
+      <a class="brand" href="index.html">WeCare</a>
+      <ul class="nav-links">
+        <li><a href="index.html" aria-label="Home"><i class="fa-solid fa-home"></i></a></li>
+        <li><a class="current" href="contact.html" aria-label="Contact"><i class="fa-solid fa-comment"></i></a></li>
+        <li><a href="about.html" aria-label="About"><i class="fa-solid fa-info"></i></a></li>
+        <li><a href="signup.html" aria-label="Sign up"><i class="fa-solid fa-user"></i></a></li>
+        <li><a href="ai.html" aria-label="AI Assistant"><i class="fa-solid fa-robot"></i></a></li>
+        <li><a href="admin-login.html" aria-label="Admin"><i class="fa-solid fa-lock"></i></a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="contact-hero">
+      <div class="container">
+        <p class="eyebrow">Contact</p>
+        <h1>Let us help you feel better, faster.</h1>
+        <p class="lead">Reach out with questions about appointments, access, or support. Our team will respond as quickly as possible.</p>
+      </div>
+    </section>
+
+    <section class="contact-body">
+      <div class="container contact-grid">
+        <div class="contact-card">
+          <h2>Send us a message</h2>
+          <p>Fill out the form below and we will get back to you within one business day.</p>
+          <form class="contact-form" action="#" method="post">
+            <div class="contact-field">
+              <label for="name">Full name</label>
+              <input type="text" id="name" name="name" placeholder="Jane Doe" required>
+            </div>
+            <div class="contact-field">
+              <label for="email">Email address</label>
+              <input type="email" id="email" name="email" placeholder="jane@domain.com" required>
+            </div>
+            <div class="contact-field">
+              <label for="topic">Topic</label>
+              <select id="topic" name="topic" required>
+                <option value="" disabled selected>Select a topic</option>
+                <option value="support">Patient support</option>
+                <option value="providers">Provider partnerships</option>
+                <option value="billing">Billing &amp; accounts</option>
+                <option value="general">General questions</option>
+              </select>
+            </div>
+            <div class="contact-field">
+              <label for="message">How can we help?</label>
+              <textarea id="message" name="message" rows="5" placeholder="Share your question or concern" required></textarea>
+            </div>
+            <div class="contact-actions">
+              <button class="button-1" type="submit">Send message</button>
+              <button class="button-ghost" type="reset">Clear</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="contact-card contact-details">
+          <h2>WeCare support</h2>
+          <p>Prefer to reach out directly? Use the details below for fast help.</p>
+          <div class="contact-detail">
+            <i class="fa-solid fa-location-dot"></i>
+            <div>
+              <h3>Head office</h3>
+              <p>1245 Healthway Avenue, Seattle, WA 98109</p>
+            </div>
+          </div>
+          <div class="contact-detail">
+            <i class="fa-solid fa-phone"></i>
+            <div>
+              <h3>Phone</h3>
+              <p>(206) 555-0198</p>
+            </div>
+          </div>
+          <div class="contact-detail">
+            <i class="fa-solid fa-envelope"></i>
+            <div>
+              <h3>Email</h3>
+              <p>support@wecare.health</p>
+            </div>
+          </div>
+          <div class="contact-detail">
+            <i class="fa-solid fa-clock"></i>
+            <div>
+              <h3>Hours</h3>
+              <p>Mon - Fri, 8:00 AM - 7:00 PM</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+    <div class="social-row">
+      <a
+        href="https://wa.me/2519XXXXXXXX"
+        target="_blank"
+        rel="noopener"
+        class="contact-btn whatsapp"
+        aria-label="Contact us on WhatsApp"
+      >
+        <img src="icons/whatsapp.svg" alt="" />
+      </a>
+      <a
+        href="https://t.me/WeCare"
+        target="_blank"
+        rel="noopener"
+        class="contact-btn telegram"
+        aria-label="Contact us on Telegram"
+      >
+        <img src="icons/telegram.svg" alt="" />
+      </a>
+      <a
+        href="https://instagram.com/WeCare"
+        target="_blank"
+        rel="noopener"
+        class="contact-btn instagram"
+        aria-label="Visit our Instagram"
+      >
+        <img src="icons/instagram.svg" alt="" />
+      </a>
+      <a
+        href="https://www.tiktok.com/@WeCare"
+        target="_blank"
+        rel="noopener"
+        class="contact-btn tiktok"
+        aria-label="Visit our TikTok"
+      >
+        <img src="icons/tiktok.svg" alt="" />
+      </a>
+    </div>
+     <footer>
+    <p>WeCare &copy; 2026, All Rights Reserved</p>
+  </footer>
+</body>
+</html>
