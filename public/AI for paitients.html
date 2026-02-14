@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeCare | Patient AI Assistant</title>
+<style>
+  body { font-family: "IBM Plex Sans", sans-serif; margin: 0; background: #121212; color: #fff; }
+  .main-content { padding: 40px; max-width: 900px; }
+  .main-content h1 { margin: 0 0 8px; }
+  .main-content a { color: #8ed0ff; }
+  .hamburger {
+    position: fixed; top: 20px; right: 20px; z-index: 1100;
+    background: #007bff; color: #fff; border: none; border-radius: 50px;
+    padding: 12px 20px; font-weight: 700; cursor: pointer;
+  }
+  .sidebar {
+    height: 100vh; width: 0; position: fixed; top: 0; right: 0; overflow: hidden;
+    background: #1a1a1a; transition: 0.3s; z-index: 1000; display: flex; flex-direction: column;
+  }
+  .sidebar.open { width: 400px; }
+  .sidebar-header { padding: 20px; background: #222; border-bottom: 1px solid #333; }
+  .sidebar-header h2 { margin: 0; color: #66b5ff; font-size: 18px; }
+  .chat-output {
+    flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
+  }
+  .message { max-width: 86%; padding: 12px 14px; border-radius: 12px; line-height: 1.4; }
+  .user-message { align-self: flex-end; background: #0a6bd7; }
+  .ai-message { align-self: flex-start; background: #2b2b2b; border: 1px solid #3b3b3b; }
+  .input-area { padding: 16px; background: #222; border-top: 1px solid #333; }
+  .chat-input-row { display: flex; flex-direction: column; gap: 10px; }
+  #userInput { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #111; color: #fff; }
+  #sendBtn { border: none; border-radius: 8px; padding: 11px; background: #007bff; color: #fff; font-weight: 700; cursor: pointer; }
+  #sendBtn:disabled { background: #444; cursor: not-allowed; }
+</style>
+</head>
+<body>
+  <div class="main-content">
+    <h1>Patient Symptom Assistant</h1>
+    <p>Use this assistant to review symptoms, get self-care guidance, and identify which specialist you should consult.</p>
+    <p><a href="patient-dashboard.html">Back to Patient Dashboard</a></p>
+  </div>
+
+  <button class="hamburger" id="hamburger">Ask Symptom AI</button>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Symptom AI</h2>
+    </div>
+    <div class="chat-output" id="chatOutput">
+      Hello. Share your symptoms and I will suggest what to do next and what specialist to contact.
+    </div>
+    <div class="input-area">
+      <div class="chat-input-row">
+        <input type="text" id="userInput" placeholder="Describe symptoms..." autocomplete="off">
+        <button id="sendBtn">Send Message</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.getElementById('hamburger');
+    const chatOutput = document.getElementById('chatOutput');
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendBtn');
+
+    (async () => {
+      try {
+        const response = await fetch('/api/user/details');
+        if (!response.ok) {
+          window.location.href = 'login.html';
+          return;
+        }
+        const user = await response.json();
+        if (user.role !== 'patient') {
+          window.location.href = 'login.html';
+        }
+      } catch (error) {
+        window.location.href = 'login.html';
+      }
+    })();
+
+    hamburger.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      if (sidebar.classList.contains('open')) {
+        setTimeout(() => userInput.focus(), 250);
+      }
+    });
+
+    const CEREBRAS_API_KEY = "csk-deh3k6kcx55xkxnvrmcj6y95dhhtjnehp3x5mmfw58pnwyxy";
+    const CEREBRAS_ENDPOINT = "https://api.cerebras.ai/v1/chat/completions";
+    const MODEL_ID = "llama-3.3-70b";
+
+    let messageHistory = [{
+      role: "system",
+      content: "You are a telemedicine patient symptom assistant. Provide safe, non-diagnostic guidance, suggest immediate next steps, and recommend the most relevant specialist. Include emergency warning signs and advise urgent or emergency care when red flags are present."
+    }];
+
+    function appendMessage(role, content) {
+      const div = document.createElement('div');
+      div.classList.add('message', role === 'user' ? 'user-message' : 'ai-message');
+      div.innerHTML = content.replace(/\n/g, '<br>');
+      chatOutput.appendChild(div);
+      chatOutput.scrollTop = chatOutput.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      appendMessage('user', text);
+      messageHistory.push({ role: "user", content: text });
+      userInput.value = '';
+      sendButton.disabled = true;
+
+      try {
+        const response = await fetch(CEREBRAS_ENDPOINT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${CEREBRAS_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: MODEL_ID,
+            messages: messageHistory,
+            stream: false,
+            temperature: 0.4
+          })
+        });
+
+        const data = await response.json();
+        const reply = data?.choices?.[0]?.message?.content || "I could not generate a response. Please try again.";
+        appendMessage('ai', reply);
+        messageHistory.push({ role: "assistant", content: reply });
+      } catch (error) {
+        appendMessage('ai', "Connection error. Please try again.");
+      } finally {
+        sendButton.disabled = false;
+      }
+    }
+
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>
