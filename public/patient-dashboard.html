@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/0ec64a7002.js" crossorigin="anonymous" defer></script>
 </head>
-<body>
+<body data-ai-mode="patient">
     <header class="site-header">
         <nav class="nav container" id="navbar">
             <a class="brand" href="index.html">WeCare</a>
@@ -18,7 +18,7 @@
                 <li><a href="index.html" aria-label="Home"><i class="fa-solid fa-home"></i></a></li>
                 <li><a href="contact.html" aria-label="Contact"><i class="fa-solid fa-comment"></i></a></li>
                 <li><a href="about.html" aria-label="About"><i class="fa-solid fa-info"></i></a></li>
-                <li><a href="AI for paitients.html" aria-label="Patient AI Assistant"><i class="fa-solid fa-robot"></i></a></li>
+                <li><a href="#" class="ai-toggle" aria-label="Patient AI Assistant"><i class="fa-solid fa-robot"></i></a></li>
             </ul>
         </nav>
     </header>
@@ -69,6 +69,7 @@
     </footer>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="ai-sidebar.js"></script>
     <script src="patient-dashboard.js"></script>
 </body>
 </html>
