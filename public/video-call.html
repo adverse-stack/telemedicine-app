@@ -11,33 +11,22 @@
     <script src="https://kit.fontawesome.com/0ec64a7002.js" crossorigin="anonymous" defer></script>
 </head>
 <body>
-    <header class="site-header">
-        <nav class="nav container" id="navbar">
-            <a class="brand" href="index.html">WeCare</a>
-            <ul class="nav-links">
-                <li><a href="index.html" aria-label="Home"><i class="fa-solid fa-home"></i></a></li>
-                <li><a href="contact.html" aria-label="Contact"><i class="fa-solid fa-comment"></i></a></li>
-                <li><a href="about.html" aria-label="About"><i class="fa-solid fa-info"></i></a></li>
-                <li><a href="signup.html" aria-label="Sign up"><i class="fa-solid fa-user"></i></a></li>
-                <li><a href="admin-login.html" aria-label="Admin"><i class="fa-solid fa-lock"></i></a></li>
-            </ul>
-        </nav>
-    </header>
-
     <main class="video-call-page">
-        <div class="container">
-            <h2>Video Call</h2>
-            <div id="video-streams" class="video-container">
+        <div class="container video-call-container">
+            <div id="video-streams" class="video-container fullscreen-target">
                 <video id="remote-video" autoplay playsinline></video>
                 <video id="local-video" autoplay playsinline muted></video>
             </div>
-            <button id="end-call-btn" class="button-ghost mt-4">End Call</button>
+            <div class="video-controls">
+                <button id="fullscreen-btn" class="video-icon-btn" aria-label="Toggle fullscreen" title="Toggle fullscreen">
+                    <i id="fullscreen-icon" class="fa-solid fa-expand"></i>
+                </button>
+                <button id="end-call-btn" class="video-icon-btn hangup-btn" aria-label="End call" title="End call">
+                    <i class="fa-solid fa-phone-slash"></i>
+                </button>
+            </div>
         </div>
     </main>
-
-    <footer>
-        <p>© 2026 TeleMed</p>
-    </footer>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="chat.js"></script>
@@ -46,6 +35,9 @@
             const params = new URLSearchParams(window.location.search);
             const room = params.get('room');
             const isCaller = params.get('caller') === 'true';
+            const videoStreams = document.getElementById('video-streams');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const fullscreenIcon = document.getElementById('fullscreen-icon');
 
             if (room) {
                 initVideo(room, isCaller);
@@ -65,14 +57,12 @@
             const endCallBtn = document.getElementById('end-call-btn');
             if (endCallBtn) {
                 endCallBtn.addEventListener('click', () => {
-                    // Implement hang-up logic here (e.g., close peer connection, stop streams)
                     if (localStream) {
                         localStream.getTracks().forEach(track => track.stop());
                     }
                     if (peerConnection) {
                         peerConnection.close();
                     }
-                    // Redirect back to dashboard
                     if (userRole === 'patient') {
                         window.location.href = '/patient-dashboard.html';
                     } else if (userRole === 'doctor') {
@@ -81,6 +71,26 @@
                         window.location.href = '/login.html';
                     }
                 });
+            }
+
+            const updateFullscreenIcon = () => {
+                const isFullscreen = !!document.fullscreenElement;
+                fullscreenIcon.className = isFullscreen ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+            };
+
+            if (fullscreenBtn && videoStreams) {
+                fullscreenBtn.addEventListener('click', async () => {
+                    try {
+                        if (!document.fullscreenElement) {
+                            await videoStreams.requestFullscreen();
+                        } else {
+                            await document.exitFullscreen();
+                        }
+                    } catch (error) {
+                        console.error('Fullscreen toggle failed:', error);
+                    }
+                });
+                document.addEventListener('fullscreenchange', updateFullscreenIcon);
             }
         });
     </script>

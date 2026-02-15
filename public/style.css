@@ -830,6 +830,92 @@ footer p {
     }
 }
 
+/* Video Call Immersive Overrides */
+.video-call-page {
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    background: #000;
+}
+
+.video-call-container {
+    width: 100vw;
+    max-width: 100vw;
+    padding: 0;
+    margin: 0;
+}
+
+.video-call-page .video-container {
+    width: 100vw;
+    min-height: calc(100vh - 84px);
+    border-radius: 0;
+    margin: 0;
+    background: #000;
+}
+
+.video-call-page #remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-call-page #local-video {
+    bottom: 16px;
+    right: 16px;
+    width: 220px;
+    height: 140px;
+    border: 2px solid rgba(255, 255, 255, 0.75);
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+.video-controls {
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0.9), rgba(10, 10, 10, 1));
+}
+
+.video-icon-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(30, 30, 30, 0.95);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.video-icon-btn:hover {
+    background: rgba(58, 58, 58, 0.95);
+}
+
+.hangup-btn {
+    background: #c62828;
+    border-color: #c62828;
+}
+
+.hangup-btn:hover {
+    background: #b71c1c;
+}
+
+.fullscreen-target:fullscreen {
+    width: 100vw;
+    height: 100vh;
+}
+
+.fullscreen-target:fullscreen #remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 /* AI Sidebar */
 .ai-sidebar {
     position: fixed;
