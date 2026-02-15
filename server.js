@@ -131,7 +131,17 @@ app.post('/api/ai/chat', async (req, res) => {
     }
 
     if (!CEREBRAS_API_KEY) {
-        return res.status(500).json({ success: false, message: 'AI service is not configured on server' });
+        return res.status(503).json({
+            success: false,
+            message: 'AI service is not configured. Set CEREBRAS_API_KEY in server environment.'
+        });
+    }
+
+    if (typeof fetch !== 'function') {
+        return res.status(500).json({
+            success: false,
+            message: 'Server runtime does not support fetch. Use Node.js 18+ on Render.'
+        });
     }
 
     try {
@@ -163,7 +173,7 @@ app.post('/api/ai/chat', async (req, res) => {
         res.json({ success: true, reply: content });
     } catch (err) {
         console.error('AI proxy error:', err);
-        res.status(500).json({ success: false, message: 'Failed to reach AI service' });
+        res.status(500).json({ success: false, message: `Failed to reach AI service: ${err.message}` });
     }
 });
 

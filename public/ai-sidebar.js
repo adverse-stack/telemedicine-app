@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
             appendMessage('assistant', reply);
             messageHistory.push({ role: 'assistant', content: reply });
         } catch (error) {
-            appendMessage('assistant', 'Connection error. Please try again.');
+            appendMessage('assistant', `Connection error: ${error.message}`);
         } finally {
             sendBtn.disabled = false;
         }
