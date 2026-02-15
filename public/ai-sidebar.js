@@ -27,10 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = container.querySelector('#ai-user-input');
     const sendBtn = container.querySelector('#ai-send-btn');
 
-    const CEREBRAS_API_KEY = "csk-deh3k6kcx55xkxnvrmcj6y95dhhtjnehp3x5mmfw58pnwyxy";
-    const CEREBRAS_ENDPOINT = "https://api.cerebras.ai/v1/chat/completions";
-    const MODEL_ID = "llama-3.3-70b";
-
     const messageHistory = [{
         role: 'system',
         content: mode === 'doctor'
@@ -96,22 +92,23 @@ document.addEventListener('DOMContentLoaded', () => {
         sendBtn.disabled = true;
 
         try {
-            const response = await fetch(CEREBRAS_ENDPOINT, {
+            const response = await fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${CEREBRAS_API_KEY}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: MODEL_ID,
                     messages: messageHistory,
-                    stream: false,
                     temperature: mode === 'doctor' ? 0.3 : 0.4
                 })
             });
 
             const data = await response.json();
-            const reply = data?.choices?.[0]?.message?.content || 'I could not generate a response.';
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'AI request failed');
+            }
+
+            const reply = data.reply || 'I could not generate a response.';
             appendMessage('assistant', reply);
             messageHistory.push({ role: 'assistant', content: reply });
         } catch (error) {

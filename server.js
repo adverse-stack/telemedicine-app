@@ -14,6 +14,9 @@ const io = socketIo(server);
 const PORT = process.env.PORT || 3000;
 const saltRounds = 10;
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey'; // Default for local dev, ensure set in Render
+const CEREBRAS_API_KEY = process.env.CEREBRAS_API_KEY;
+const CEREBRAS_ENDPOINT = 'https://api.cerebras.ai/v1/chat/completions';
+const CEREBRAS_MODEL = process.env.CEREBRAS_MODEL || 'llama-3.3-70b';
 const onlineDoctors = {};
 const onlinePatients = {};
 
@@ -117,6 +120,50 @@ app.get('/api/user/details', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error('Error fetching authenticated user details:', err);
         res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.post('/api/ai/chat', async (req, res) => {
+    const { messages, temperature } = req.body || {};
+
+    if (!Array.isArray(messages) || messages.length === 0) {
+        return res.status(400).json({ success: false, message: 'messages must be a non-empty array' });
+    }
+
+    if (!CEREBRAS_API_KEY) {
+        return res.status(500).json({ success: false, message: 'AI service is not configured on server' });
+    }
+
+    try {
+        const response = await fetch(CEREBRAS_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${CEREBRAS_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: CEREBRAS_MODEL,
+                messages,
+                stream: false,
+                temperature: typeof temperature === 'number' ? temperature : 0.4
+            })
+        });
+
+        const data = await response.json();
+        const content = data?.choices?.[0]?.message?.content;
+
+        if (!response.ok || !content) {
+            return res.status(502).json({
+                success: false,
+                message: 'AI upstream error',
+                details: data
+            });
+        }
+
+        res.json({ success: true, reply: content });
+    } catch (err) {
+        console.error('AI proxy error:', err);
+        res.status(500).json({ success: false, message: 'Failed to reach AI service' });
     }
 });
 
