@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addDoctorForm = document.getElementById('add-doctor-form');
     const doctorsTableBody = document.getElementById('doctors-table-body');
     const doctorsListMessage = document.getElementById('doctors-list-message');
+    const logoutBtn = document.getElementById('logout-btn');
 
 
     // Function to fetch and display doctors
@@ -115,5 +116,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Call fetchDoctors on admin page load, as determined by the presence of relevant elements
     if (doctorsTableBody && addDoctorForm) { // Assuming these elements are unique to admin.html
         fetchDoctors();
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/logout', { method: 'POST' });
+                if (response.ok) {
+                    window.location.href = 'admin-login.html';
+                } else {
+                    alert('Logout failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error during admin logout:', error);
+                alert('An error occurred during logout.');
+            }
+        });
     }
 });

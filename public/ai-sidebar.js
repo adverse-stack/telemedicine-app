@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const mode = document.body.dataset.aiMode === 'doctor' ? 'doctor' : 'patient';
+    const aiMode = document.body.dataset.aiMode;
+    const mode = aiMode === 'doctor' ? 'doctor' : 'patient';
     const toggles = document.querySelectorAll('.ai-toggle');
     if (!toggles.length) return;
 
@@ -43,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const verifyRoleIfNeeded = async () => {
-        if (document.body.dataset.aiMode !== 'patient' && document.body.dataset.aiMode !== 'doctor') {
+        if (aiMode !== 'patient' && aiMode !== 'doctor') {
             return true;
         }
 
@@ -51,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/user/details');
             if (!res.ok) return false;
             const user = await res.json();
-            return user.role === document.body.dataset.aiMode;
+            return user.role === aiMode;
         } catch (err) {
             return false;
         }

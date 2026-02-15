@@ -122,10 +122,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     backBtn.addEventListener('click', () => {
-        if (currentUserRole === 'patient') {
-            window.location.href = '/patient-dashboard.html';
-        } else if (currentUserRole === 'doctor') {
+        // Primary source is authenticated role. Fallback uses URL shape for robustness.
+        if (currentUserRole === 'doctor' || (patientIdParam && patientNameParam)) {
             window.location.href = '/doctor-dashboard.html';
+        } else {
+            window.location.href = '/patient-dashboard.html';
         }
     });
 });
