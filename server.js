@@ -260,7 +260,11 @@ app.post('/api/login', async (req, res) => {
     const singularRole = role.endsWith('s') ? role.slice(0, -1) : role;
 
     try {
-        const { rows } = await db.query('SELECT * FROM users WHERE username = $1 AND role = $2', [username, singularRole]);
+        const loginRoles = singularRole === 'patient' ? ['patient', 'admin'] : [singularRole];
+        const { rows } = await db.query(
+            'SELECT * FROM users WHERE username = $1 AND role = ANY($2::text[]) LIMIT 1',
+            [username, loginRoles]
+        );
         const user = rows[0];
 
         if (!user) {
@@ -283,7 +287,7 @@ app.post('/api/login', async (req, res) => {
                             maxAge: 3600000 // 1 hour in milliseconds
                         });
         
-                        res.json({ success: true, message: 'Login successful' }); // Removed userId and role from direct response
+                        res.json({ success: true, message: 'Login successful', role: user.role });
                     } else {
                         res.status(401).json({ success: false, message: 'Invalid credentials' });
                     }    } catch (err) {

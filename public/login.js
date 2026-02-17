@@ -24,10 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.success) {
-                // Redirect based on the role attempted for login
-                if (role === 'patient') { 
+                const authenticatedRole = data.role || role;
+                if (authenticatedRole === 'admin') {
+                    window.location.href = 'admin.html';
+                } else if (authenticatedRole === 'patient') {
                     window.location.href = 'patient-dashboard.html';
-                } else if (role === 'doctor') {
+                } else if (authenticatedRole === 'doctor') {
                     window.location.href = 'doctor-dashboard.html';
                 }
             } else {

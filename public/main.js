@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch('/api/logout', { method: 'POST' });
                 if (response.ok) {
-                    window.location.href = 'admin-login.html';
+                    window.location.href = 'login.html';
                 } else {
                     alert('Logout failed. Please try again.');
                 }
