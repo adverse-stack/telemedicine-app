@@ -70,9 +70,12 @@ p {
 }
 
 .brand img {
-  height: 68px;
+  height: 76px;
   width: auto;
   display: block;
+  background: transparent !important;
+  border: 0;
+  box-shadow: none;
 }
 
 .nav-links {
