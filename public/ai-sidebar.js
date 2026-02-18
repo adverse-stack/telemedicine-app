@@ -104,9 +104,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            const data = await response.json();
+            const raw = await response.text();
+            let data = null;
+            try {
+                data = raw ? JSON.parse(raw) : null;
+            } catch (parseError) {
+                throw new Error(`Invalid response format (status ${response.status})`);
+            }
+
             if (!response.ok || !data.success) {
-                throw new Error(data.message || 'AI request failed');
+                const details = data?.upstreamStatus ? ` (upstream ${data.upstreamStatus})` : '';
+                throw new Error((data.message || 'AI request failed') + details);
             }
 
             const reply = data.reply || 'I could not generate a response.';

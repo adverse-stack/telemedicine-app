@@ -159,13 +159,26 @@ app.post('/api/ai/chat', async (req, res) => {
             })
         });
 
-        const data = await response.json();
+        const upstreamRaw = await response.text();
+        let data = null;
+        try {
+            data = upstreamRaw ? JSON.parse(upstreamRaw) : null;
+        } catch (parseErr) {
+            data = { message: upstreamRaw || 'Empty non-JSON upstream response' };
+        }
         const content = data?.choices?.[0]?.message?.content;
 
         if (!response.ok || !content) {
+            const upstreamMessage =
+                data?.error?.message ||
+                data?.message ||
+                (typeof data?.error === 'string' ? data.error : null) ||
+                `Upstream status ${response.status}`;
+
             return res.status(502).json({
                 success: false,
-                message: 'AI upstream error',
+                message: `AI upstream error: ${upstreamMessage}`,
+                upstreamStatus: response.status,
                 details: data
             });
         }
